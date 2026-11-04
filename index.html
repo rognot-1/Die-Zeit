@@ -162,23 +162,33 @@
       const plantDays = ["Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"];
       document.getElementById('farmerDay').textContent = plantDays[zodiacIndex];
 
-      // Planeten (Astronomy Engine)
-      if (typeof Astronomy !== 'undefined') {
+           // Planeten (Astronomy Engine)
+      const astro = (typeof Astronomy !== 'undefined') ? Astronomy : (typeof astronomy !== 'undefined' ? astronomy : null);
+      
+      if (astro) {
         const signs = ["Widder", "Stier", "Zwillinge", "Krebs", "Löwe", "Jungfrau", "Waage", "Skorpion", "Schütze", "Steinbock", "Wassermann", "Fische"];
         const planetMap = {
-          'planetJupiter': Astronomy.Body.Jupiter,
-          'planetSaturn': Astronomy.Body.Saturn,
-          'planetMars': Astronomy.Body.Mars,
-          'planetVenus': Astronomy.Body.Venus
+          'planetJupiter': astro.Body.Jupiter,
+          'planetSaturn': astro.Body.Saturn,
+          'planetMars': astro.Body.Mars,
+          'planetVenus': astro.Body.Venus
         };
+        
         for (const [elementId, planet] of Object.entries(planetMap)) {
           try {
-            const eq = Astronomy.Equator(planet, now, new Astronomy.Observer(lat, lng, 0), true, true);
-            const ecl = Astronomy.Ecliptic(eq.ra, eq.dec);
+            const time = new astro.AstroTime(now);
+            const eq = astro.Equator(planet, time, new astro.Observer(lat, lng, 0), true, true);
+            const ecl = astro.Ecliptic(eq.ra, eq.dec);
             const signIndex = Math.floor(ecl.elon / 30);
             document.getElementById(elementId).textContent = signs[signIndex];
-          } catch (e) {}
+          } catch (e) {
+            console.log("Fehler bei Planet " + planet, e);
+            document.getElementById(elementId).textContent = "Fehler";
+          }
         }
+      } else {
+        console.log("Astronomy Bibliothek nicht gefunden!");
+      }
       }
     } // <-- HIER ENDET DIE FUNKTION. DAS IST JETZT SAUBER.
 
