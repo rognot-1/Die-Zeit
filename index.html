@@ -31,6 +31,10 @@
         <input type="checkbox" id="siderealToggle" checked style="width: 1.2rem; height: 1.2rem; accent-color: #ffaa00;">
         <span>Sternzeit</span>
       </label>
+              <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+        <input type="checkbox" id="farmerToggle" checked style="width: 1.2rem; height: 1.2rem; accent-color: #4caf50;">
+        <span>Bauernkalender</span>
+      </label>
     </div>
   </div>
     <div id="tcmBox" style="background: #252540; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem; border-left: 4px solid #ffaa00;">
@@ -64,6 +68,10 @@
     <div id="siderealData">
     <div class="row"><span class="label">Lokale Sternzeit</span><span class="value" id="siderealTime">–</span></div>
   </div>
+        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+        <input type="checkbox" id="farmerToggle" checked style="width: 1.2rem; height: 1.2rem; accent-color: #4caf50;">
+        <span>Bauernkalender</span>
+      </label>
   <script>
     // Variablen für den Standort
     let lat = 47.42, lng = 8.27;
@@ -71,6 +79,7 @@
 
     // Funktion zur Berechnung der Himmelsdaten
     function calculateAndDisplay() {
+      
       const now = new Date();
       const times = SunCalc.getTimes(now, lat, lng);
       const moonIllum = SunCalc.getMoonIllumination(now);
@@ -211,6 +220,24 @@
       const s = Math.floor(totalSeconds % 60);
       const formattedSidereal = `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
       document.getElementById('siderealTime').textContent = formattedSidereal;
+            // --- NEU: Mondpflanzentag berechnen ---
+      const T = (now.getTime() / 86400000) + 2440587.5;
+      const d2 = T - 2451545.0;
+      let moonLon = 218.32 + 13.176396 * d2 + 6.29 * Math.sin((134.9 + 13.064993 * d2) * Math.PI / 180);
+      moonLon = moonLon % 360;
+      if (moonLon < 0) moonLon += 360;
+
+      const zodiacIndex = Math.floor(moonLon / 30);
+
+      const plantDays = [
+        "Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", 
+        "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", 
+        "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", 
+        "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"
+      ];
+
+      const currentPlantDay = plantDays[zodiacIndex];
+      document.getElementById('farmerDay').textContent = currentPlantDay;
     }
 
     updateClock();
@@ -252,6 +279,25 @@
         moonData.style.display = 'block';
       } else {
         moonData.style.display = 'none';
+      }
+    });
+          // Schalter für die Sternzeit
+    document.getElementById('siderealToggle').addEventListener('change', (event) => {
+      const siderealData = document.getElementById('siderealData');
+      if (event.target.checked) {
+        siderealData.style.display = 'block';
+      } else {
+        siderealData.style.display = 'none';
+      }
+    });
+
+    // Schalter für den Bauernkalender
+    document.getElementById('farmerToggle').addEventListener('change', (event) => {
+      const farmerData = document.getElementById('farmerData');
+      if (event.target.checked) {
+        farmerData.style.display = 'block';
+      } else {
+        farmerData.style.display = 'none';
       }
     });
     });
