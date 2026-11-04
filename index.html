@@ -27,24 +27,12 @@
   </div>
 
   <div style="background: #1f1f35; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 0.8rem; justify-content: center; border: 1px solid #333;">
-    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
-      <input type="checkbox" id="tcmToggle" checked style="accent-color: #ffaa00;"> <span>TCM</span>
-    </label>
-    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
-      <input type="checkbox" id="moonToggle" checked style="accent-color: #ccc;"> <span>Mond</span>
-    </label>
-    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
-      <input type="checkbox" id="siderealToggle" checked style="accent-color: #ffaa00;"> <span>Sternzeit</span>
-    </label>
-    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
-      <input type="checkbox" id="farmerToggle" checked style="accent-color: #4caf50;"> <span>Bauernkalender</span>
-    </label>
-    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
-      <input type="checkbox" id="planetToggle" checked style="accent-color: #00bcd4;"> <span>Planeten</span>
-    </label>
-        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
-      <input type="checkbox" id="ganzhiToggle" checked style="accent-color: #e91e63;"> <span>Gan-Zhi & Akupunktur</span>
-    </label>
+    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="tcmToggle" checked style="accent-color: #ffaa00;"> <span>TCM</span></label>
+    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="moonToggle" checked style="accent-color: #ccc;"> <span>Mond</span></label>
+    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="siderealToggle" checked style="accent-color: #ffaa00;"> <span>Sternzeit</span></label>
+    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="farmerToggle" checked style="accent-color: #4caf50;"> <span>Bauernkalender</span></label>
+    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="planetToggle" checked style="accent-color: #00bcd4;"> <span>Planeten</span></label>
+    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="ganzhiToggle" checked style="accent-color: #e91e63;"> <span>Gan-Zhi & Akupunktur</span></label>
   </div>
 
   <div id="tcmBox" style="background: #252540; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem; border-left: 4px solid #ffaa00;">
@@ -77,10 +65,11 @@
     <div class="row"><span class="label">Mars</span><span class="value" id="planetMars">–</span></div>
     <div class="row"><span class="label">Venus</span><span class="value" id="planetVenus">–</span></div>
   </div>
-    <div id="ganzhiData">
+
+  <div id="ganzhiData">
     <div class="row"><span class="label">Tages-Gan-Zhi</span><span class="value" id="dayGanZhi" style="color: #e91e63; font-weight: bold;">–</span></div>
     <div class="row"><span class="label">Stunden-Gan-Zhi</span><span class="value" id="hourGanZhi" style="color: #e91e63; font-weight: bold;">–</span></div>
-    <div class="row"><span class="label">Geöffneter Punkt (Na Zi)</span><span class="value" id="acupoint" style="color: #03a9f4; font-weight: bold;">–</span></div>
+    <div class="row"><span class="label">Geöffneter Punkt</span><span class="value" id="acupoint" style="color: #03a9f4; font-weight: bold;">–</span></div>
   </div>
 
   <script>
@@ -153,15 +142,13 @@
       document.getElementById('siderealTime').textContent = `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
 
       // Bauernkalender
-      const T = jd; const d2 = T - 2451545.0;
-      let moonLon = 218.32 + 13.176396 * d2 + 6.29 * Math.sin((134.9 + 13.064993 * d2) * Math.PI / 180);
+      let moonLon = 218.32 + 13.176396 * d + 6.29 * Math.sin((134.9 + 13.064993 * d) * Math.PI / 180);
       moonLon = moonLon % 360; if (moonLon < 0) moonLon += 360;
       const zodiacIndex = Math.floor(moonLon / 30);
       const plantDays = ["Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"];
       document.getElementById('farmerDay').textContent = plantDays[zodiacIndex];
 
-      // Planeten (Einfache Kepler-Berechnung)
-      // Da die Bibliothek Probleme macht, nutzen wir eine genäherte, aber stabile Formel für die Tierkreiszeichen
+      // Planeten (Kepler-Näherung)
       const planets = {
         'planetJupiter': { period: 11.86, offset: 0.5 },
         'planetSaturn': { period: 29.46, offset: 1.2 },
@@ -169,40 +156,35 @@
         'planetVenus': { period: 0.62, offset: 2.1 }
       };
       const signs = ["Widder", "Stier", "Zwillinge", "Krebs", "Löwe", "Jungfrau", "Waage", "Skorpion", "Schütze", "Steinbock", "Wassermann", "Fische"];
-      
-      // Einfache Näherung: Wir berechnen die Position basierend auf der vergangenen Zeit seit einem Referenzpunkt
       const yearsSince2000 = d / 365.25;
-      
       for (const [id, data] of Object.entries(planets)) {
-        // Berechnung des aktuellen Winkels (0-360)
         let angle = ((yearsSince2000 / data.period) * 360 + (data.offset * 30)) % 360;
         if (angle < 0) angle += 360;
         const signIndex = Math.floor(angle / 30);
         document.getElementById(id).textContent = signs[signIndex];
+      }
 
-                   // --- NEU: Chinesische Zeit (Gan-Zhi) ---
-      const stems = ["Jia", "Yi", "Bing", "Ding", "Wu", "Ji", "Geng", "Xin", "Ren", "Gui"];
-      const branches = ["Zi", "Chou", "Yin", "Mao", "Chen", "Si", "Wu", "Wei", "Shen", "You", "Xu", "Hai"];
+      // --- NEU: Chinesische Zeit (Gan-Zhi) ---
+      const stems = ["Jia (Holz)", "Yi (Holz)", "Bing (Feuer)", "Ding (Feuer)", "Wu (Erde)", "Ji (Erde)", "Geng (Metall)", "Xin (Metall)", "Ren (Wasser)", "Gui (Wasser)"];
+      const branches = ["Zi (Ratte)", "Chou (Ochse)", "Yin (Tiger)", "Mao (Hase)", "Chen (Drache)", "Si (Schlange)", "Wu (Pferd)", "Wei (Ziege)", "Shen (Affe)", "You (Hahn)", "Xu (Hund)", "Hai (Schwein)"];
       
-      // Tages-Gan-Zhi (Referenz: 1. Jan 1900 war Jia-Xu)
       const daysSince1900 = Math.floor((now.getTime() - new Date(1900, 0, 1).getTime()) / 86400000);
-      const dayStem = stems[(daysSince1900 + 0) % 10];
-      const dayBranch = branches[(daysSince1900 + 10) % 12];
-        alert("Hier bin ich: " + dayStem + " " + dayBranch);
-      document.getElementById('dayGanZhi').textContent = dayStem + " / " + dayBranch;
+      const dayStemIndex = (daysSince1900 + 0) % 10;
+      const dayBranchIndex = (daysSince1900 + 10) % 12;
+      
+      document.getElementById('dayGanZhi').textContent = stems[dayStemIndex] + " / " + branches[dayBranchIndex];
 
-      // Stunden-Gan-Zhi
       let hourBranchIndex = Math.floor((currentHour + 1) / 2) % 12;
       if (currentHour === 23) hourBranchIndex = 0;
-      const hourStemBase = ((daysSince1900 + 0) % 5) * 2;
-      const hourStem = stems[(hourStemBase + hourBranchIndex) % 10];
-      const hourBranch = branches[hourBranchIndex];
-      document.getElementById('hourGanZhi').textContent = hourStem + " / " + hourBranch;
+      const hourStemBase = (dayStemIndex % 5) * 2;
+      const hourStemIndex = (hourStemBase + hourBranchIndex) % 10;
+      document.getElementById('hourGanZhi').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
 
-      // Akupunktur-Punkt (Vereinfachte Na Zi Zuordnung der 5 Shu-Punkte)
       const shuPoints = ["Jing-Well", "Ying-Spring", "Shu-Stream", "Jing-River", "He-Sea"];
       const pointIndex = hourBranchIndex % 5;
       document.getElementById('acupoint').textContent = shuPoints[pointIndex];
+    }
+
     calculateAndDisplay();
     updateClock();
     setInterval(updateClock, 1000);
@@ -221,7 +203,7 @@
       }
     });
 
-       ['tcm', 'moon', 'sidereal', 'farmer', 'planet', 'ganzhi'].forEach(type => {
+    ['tcm', 'moon', 'sidereal', 'farmer', 'planet', 'ganzhi'].forEach(type => {
       document.getElementById(type + 'Toggle').addEventListener('change', (event) => {
         const box = document.getElementById(type === 'tcm' ? 'tcmBox' : type + 'Data');
         if (box) box.style.display = event.target.checked ? 'block' : 'none';
