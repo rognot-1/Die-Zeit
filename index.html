@@ -31,7 +31,7 @@
 
     function formatTime(date) {
       if (!date || isNaN(date)) return '–';
-      return date.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich' });
     }
 
     document.getElementById('sunrise').textContent = formatTime(times.sunrise);
