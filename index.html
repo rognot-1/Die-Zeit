@@ -27,6 +27,10 @@
         <input type="checkbox" id="moonToggle" checked style="width: 1.2rem; height: 1.2rem; accent-color: #ccc;">
         <span>Mond</span>
       </label>
+              <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+        <input type="checkbox" id="siderealToggle" checked style="width: 1.2rem; height: 1.2rem; accent-color: #ffaa00;">
+        <span>Sternzeit</span>
+      </label>
     </div>
   </div>
     <div id="tcmBox" style="background: #252540; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem; border-left: 4px solid #ffaa00;">
@@ -56,6 +60,9 @@
     <div class="row"><span class="label">Mondphase</span><span class="value" id="moonPhase">–</span></div>
     <div class="row"><span class="label">Mondaufgang</span><span class="value" id="moonrise">–</span></div>
     <div class="row"><span class="label">Monduntergang</span><span class="value" id="moonset">–</span></div>
+  </div>
+    <div id="siderealData">
+    <div class="row"><span class="label">Lokale Sternzeit</span><span class="value" id="siderealTime">–</span></div>
   </div>
   <script>
     // Variablen für den Standort
@@ -92,6 +99,30 @@
               const moonTimes = SunCalc.getMoonTimes(now, lat, lng);
       document.getElementById('moonrise').textContent = formatTime(moonTimes.rise);
       document.getElementById('moonset').textContent = formatTime(moonTimes.set);
+              // --- NEU: Lokale Sternzeit berechnen ---
+      // 1. Julianisches Datum berechnen (Tage seit 1.1.2000, 12:00 UTC)
+      const jd = (now.getTime() / 86400000) + 2440587.5;
+      const d = jd - 2451545.0;
+
+      // 2. Greenwich Mean Sidereal Time (GMST) in Grad berechnen
+      let gmst = 280.46061837 + 360.98564736629 * d;
+      gmst = gmst % 360; 
+      if (gmst < 0) gmst += 360;
+
+      // 3. Längengrad anpassen (für den lokalen Standort)
+      let lst = gmst + lng;
+      lst = lst % 360;
+      if (lst < 0) lst += 360;
+
+      // 4. Grad in Stunden, Minuten und Sekunden umrechnen
+      const totalSeconds = (lst / 15) * 3600; // 360 Grad = 24 Stunden
+      const h = Math.floor(totalSeconds / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
+      const s = Math.floor(totalSeconds % 60);
+
+      // 5. Formatieren (z.B. "14h 32m 18s")
+      const formattedSidereal = `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+      document.getElementById('siderealTime').textContent = formattedSidereal;
       }
 
       const phasePercent = Math.round(moonIllum.fraction * 100);
