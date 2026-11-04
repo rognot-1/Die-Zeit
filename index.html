@@ -180,50 +180,28 @@
         const signIndex = Math.floor(angle / 30);
         document.getElementById(id).textContent = signs[signIndex];
 
-              // --- NEU: Chinesische Zeit (Gan-Zhi & Akupunktur) ---
-      // 1. Tages-Gan-Zhi berechnen (Basierend auf Tagen seit einem bekannten Referenzdatum)
-      // Referenz: 1. Januar 1900 war ein Tag "Jia-Xu" (Stamm 1, Zweig 11)
+                   // --- NEU: Chinesische Zeit (Gan-Zhi) ---
+      const stems = ["Jia", "Yi", "Bing", "Ding", "Wu", "Ji", "Geng", "Xin", "Ren", "Gui"];
+      const branches = ["Zi", "Chou", "Yin", "Mao", "Chen", "Si", "Wu", "Wei", "Shen", "You", "Xu", "Hai"];
+      
+      // Tages-Gan-Zhi (Referenz: 1. Jan 1900 war Jia-Xu)
       const daysSince1900 = Math.floor((now.getTime() - new Date(1900, 0, 1).getTime()) / 86400000);
-      const dayStemIndex = (daysSince1900 + 0) % 10; // 0=Jia, 1=Yi...
-      const dayBranchIndex = (daysSince1900 + 10) % 12; // 0=Zi, 1=Chou...
-      
-      const stems = ["Jia (Holz)", "Yi (Holz)", "Bing (Feuer)", "Ding (Feuer)", "Wu (Erde)", "Ji (Erde)", "Geng (Metall)", "Xin (Metall)", "Ren (Wasser)", "Gui (Wasser)"];
-      const branches = ["Zi (Ratte)", "Chou (Ochse)", "Yin (Tiger)", "Mao (Hase)", "Chen (Drache)", "Si (Schlange)", "Wu (Pferd)", "Wei (Ziege)", "Shen (Affe)", "You (Hahn)", "Xu (Hund)", "Hai (Schwein)"];
-      
-      document.getElementById('dayGanZhi').textContent = stems[dayStemIndex] + " / " + branches[dayBranchIndex];
+      const dayStem = stems[(daysSince1900 + 0) % 10];
+      const dayBranch = branches[(daysSince1900 + 10) % 12];
+      document.getElementById('dayGanZhi').textContent = dayStem + " / " + dayBranch;
 
-      // 2. Stunden-Gan-Zhi berechnen
-      // Die Stunde "Zi" beginnt um 23:00 Uhr.
-      let hourBranchIndex = 0;
-      if (currentHour >= 23 || currentHour < 1) hourBranchIndex = 0; // Zi
-      else hourBranchIndex = Math.floor((currentHour + 1) / 2);
-      
-      // Der Stamm der Stunde hängt vom Stamm des Tages ab (5er-Zyklus)
-      // Tag Jia oder Ji -> Stunde beginnt mit Jia
-      let hourStemBase = (dayStemIndex % 5) * 2;
-      const hourStemIndex = (hourStemBase + hourBranchIndex) % 10;
+      // Stunden-Gan-Zhi
+      let hourBranchIndex = Math.floor((currentHour + 1) / 2) % 12;
+      if (currentHour === 23) hourBranchIndex = 0;
+      const hourStemBase = ((daysSince1900 + 0) % 5) * 2;
+      const hourStem = stems[(hourStemBase + hourBranchIndex) % 10];
+      const hourBranch = branches[hourBranchIndex];
+      document.getElementById('hourGanZhi').textContent = hourStem + " / " + hourBranch;
 
-      document.getElementById('hourGanZhi').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
-
-      // 3. Akupunktur-Punkt (Na Zi Fa - vereinfachte klassische Zuordnung)
-      // Die 5 Shu-Punkte (Jing-Well, Ying-Spring, Shu-Stream, Jing-River, He-Sea)
-      // Die genaue Zuweisung hängt von der Tageszeit und dem Tag ab.
-      // Hier nutzen wir die klassische Tabelle für die tägliche Öffnung:
+      // Akupunktur-Punkt (Vereinfachte Na Zi Zuordnung der 5 Shu-Punkte)
       const shuPoints = ["Jing-Well", "Ying-Spring", "Shu-Stream", "Jing-River", "He-Sea"];
-      
-      // Klassische Zuordnung: Tag 1 (Jia) = Lunge, Tag 2 (Yi) = Dickdarm, etc. (gekürzt auf die 5 Shu-Punkte)
-      // Für eine exakte Na Zi Berechnung bräuchten wir die Zuordnung der Stämme zu den Meridianen.
-      // Dies ist eine vereinfachte, aber traditionell anerkannte Zuordnung der 5 Punkte zu den 5 Elementen:
-      const elementIndex = (dayStemIndex % 5); // 0=Holz, 1=Feuer, 2=Erde, 3=Metall, 4=Wasser
-      const pointIndex = hourBranchIndex % 5; 
-      
-      // Für eine korrekte klinische Anwendung müsste hier die volle Tabelle stehen.
-      // Wir zeigen hier den traditionellen "Öffnungs-Punkt" basierend auf der Stunde an.
-      // (Bitte mit deinem Lehrer abgleichen, die klassischen Texte variieren hier!)
-      document.getElementById('acupoint').textContent = shuPoints[pointIndex] + " (Element " + ["Holz", "Feuer", "Erde", "Metall", "Wasser"][elementIndex] + ")";
-      }
-    }
-
+      const pointIndex = hourBranchIndex % 5;
+      document.getElementById('acupoint').textContent = shuPoints[pointIndex];
     calculateAndDisplay();
     updateClock();
     setInterval(updateClock, 1000);
