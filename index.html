@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Zeitmesser – Mellingen</title>
   <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@swisseph/browser@0.1.0/dist/swisseph.js"></script>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 500px; margin: 2rem auto; padding: 0 1rem; background: #1a1a2e; color: #eaeaea; }
     h1 { font-weight: 300; letter-spacing: 0.05em; }
@@ -40,6 +41,9 @@
     <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
       <input type="checkbox" id="farmerToggle" checked style="accent-color: #4caf50;"> <span>Bauernkalender</span>
     </label>
+    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+  <input type="checkbox" id="planetToggle" checked style="accent-color: #00bcd4;"> <span>Planeten</span>
+</label>
   </div>
 
   <!-- TCM -->
@@ -67,6 +71,12 @@
   <div id="farmerData">
     <div class="row"><span class="label">Mondpflanzentag</span><span class="value" id="farmerDay" style="color: #4caf50; font-weight: bold;">–</span></div>
   </div>
+  <div id="planetData">
+  <div class="row"><span class="label">Jupiter</span><span class="value" id="planetJupiter">–</span></div>
+  <div class="row"><span class="label">Saturn</span><span class="value" id="planetSaturn">–</span></div>
+  <div class="row"><span class="label">Mars</span><span class="value" id="planetMars">–</span></div>
+  <div class="row"><span class="label">Venus</span><span class="value" id="planetVenus">–</span></div>
+</div>
 
   <script>
     let lat = 47.42, lng = 8.27;
@@ -144,6 +154,29 @@
       const zodiacIndex = Math.floor(moonLon / 30);
       const plantDays = ["Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"];
       document.getElementById('farmerDay').textContent = plantDays[zodiacIndex];
+        // --- NEU: Planeten berechnen ---
+  if (typeof SwissEphemeris !== 'undefined') {
+    const swe = new SwissEphemeris();
+    swe.init().then(() => {
+      const jd = swe.dateToJulianDay(now);
+      const planetMap = {
+        'planetJupiter': swe.Planet.Jupiter,
+        'planetSaturn': swe.Planet.Saturn,
+        'planetMars': swe.Planet.Mars,
+        'planetVenus': swe.Planet.Venus
+      };
+      for (const [elementId, planet] of Object.entries(planetMap)) {
+        try {
+          const pos = swe.calculatePosition(jd, planet);
+          const signIndex = Math.floor(pos.longitude / 30);
+          const signs = ["Widder", "Stier", "Zwillinge", "Krebs", "Löwe", "Jungfrau", "Waage", "Skorpion", "Schütze", "Steinbock", "Wassermann", "Fische"];
+          document.getElementById(elementId).textContent = signs[signIndex];
+        } catch (e) {
+          console.warn("Planet Fehler:", e);
+        }
+      }
+    });
+  }
     }
 
     calculateAndDisplay();
@@ -166,7 +199,7 @@
     });
 
     // Schalter
-    ['tcm', 'moon', 'sidereal', 'farmer'].forEach(type => {
+    ['tcm', 'moon', 'sidereal', 'farmer', 'planet'].forEach(type => {
       document.getElementById(type + 'Toggle').addEventListener('change', (event) => {
         const box = document.getElementById(type === 'tcm' ? 'tcmBox' : type + 'Data');
         if (box) box.style.display = event.target.checked ? 'block' : 'none';
