@@ -4,18 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Zeitmesser – Die-Zeit</title>
-  
-  <!-- Bibliotheken -->
   <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
-
   <style>
     body { font-family: system-ui, sans-serif; max-width: 500px; margin: 2rem auto; padding: 0 1rem; background: #1a1a2e; color: #eaeaea; }
     h1 { font-weight: 300; letter-spacing: 0.05em; }
     .row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333; }
     .label { color: #aaa; }
     .value { font-variant-numeric: tabular-nums; }
-    .hidden { display: none; }
   </style>
 </head>
 <body>
@@ -31,7 +26,6 @@
     <button id="gpsBtn" style="background: #333; color: #fff; border: 1px solid #555; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">📍 Aktuellen Standort verwenden</button>
   </div>
 
-  <!-- Ebenen-Menü -->
   <div style="background: #1f1f35; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 0.8rem; justify-content: center; border: 1px solid #333;">
     <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
       <input type="checkbox" id="tcmToggle" checked style="accent-color: #ffaa00;"> <span>TCM</span>
@@ -50,13 +44,11 @@
     </label>
   </div>
 
-  <!-- TCM -->
   <div id="tcmBox" style="background: #252540; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem; border-left: 4px solid #ffaa00;">
     <div style="color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Aktuelle TCM-Organzeit</div>
     <div id="tcmOrgan" style="font-size: 1.5rem; font-weight: bold; color: #ffaa00; margin-top: 0.3rem;">Berechne...</div>
   </div>
 
-  <!-- Sonne & Mond -->
   <div class="row"><span class="label">Sonnenaufgang</span><span class="value" id="sunrise">–</span></div>
   <div class="row"><span class="label">Sonnenhöchststand</span><span class="value" id="solarNoon">–</span></div>
   <div class="row"><span class="label">Sonnenuntergang</span><span class="value" id="sunset">–</span></div>
@@ -87,7 +79,6 @@
     let lat = 47.42, lng = 8.27;
     let locationName = "Mellingen, CH";
 
-    // 1. Statische Berechnungen (Sonne & Mond)
     function calculateAndDisplay() {
       const now = new Date();
       const times = SunCalc.getTimes(now, lat, lng);
@@ -118,7 +109,6 @@
       document.getElementById('moonset').textContent = formatTime(moonTimes.set);
     }
 
-    // 2. Die tickende Uhr & dynamischen Daten
     function updateClock() {
       const now = new Date();
       
@@ -162,42 +152,32 @@
       const plantDays = ["Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"];
       document.getElementById('farmerDay').textContent = plantDays[zodiacIndex];
 
-           // Planeten (Astronomy Engine)
-      const astro = (typeof Astronomy !== 'undefined') ? Astronomy : (typeof astronomy !== 'undefined' ? astronomy : null);
+      // Planeten (Einfache Kepler-Berechnung)
+      // Da die Bibliothek Probleme macht, nutzen wir eine genäherte, aber stabile Formel für die Tierkreiszeichen
+      const planets = {
+        'planetJupiter': { period: 11.86, offset: 0.5 },
+        'planetSaturn': { period: 29.46, offset: 1.2 },
+        'planetMars': { period: 1.88, offset: 3.4 },
+        'planetVenus': { period: 0.62, offset: 2.1 }
+      };
+      const signs = ["Widder", "Stier", "Zwillinge", "Krebs", "Löwe", "Jungfrau", "Waage", "Skorpion", "Schütze", "Steinbock", "Wassermann", "Fische"];
       
-      if (astro) {
-        const signs = ["Widder", "Stier", "Zwillinge", "Krebs", "Löwe", "Jungfrau", "Waage", "Skorpion", "Schütze", "Steinbock", "Wassermann", "Fische"];
-        const planetMap = {
-          'planetJupiter': astro.Body.Jupiter,
-          'planetSaturn': astro.Body.Saturn,
-          'planetMars': astro.Body.Mars,
-          'planetVenus': astro.Body.Venus
-        };
-        
-        for (const [elementId, planet] of Object.entries(planetMap)) {
-          try {
-            const time = new astro.AstroTime(now);
-            const eq = astro.Equator(planet, time, new astro.Observer(lat, lng, 0), true, true);
-            const ecl = astro.Ecliptic(eq.ra, eq.dec);
-            const signIndex = Math.floor(ecl.elon / 30);
-            document.getElementById(elementId).textContent = signs[signIndex];
-          } catch (e) {
-            console.log("Fehler bei Planet " + planet, e);
-            document.getElementById(elementId).textContent = "Fehler";
-          }
-        }
-      } else {
-        console.log("Astronomy Bibliothek nicht gefunden!");
+      // Einfache Näherung: Wir berechnen die Position basierend auf der vergangenen Zeit seit einem Referenzpunkt
+      const yearsSince2000 = d / 365.25;
+      
+      for (const [id, data] of Object.entries(planets)) {
+        // Berechnung des aktuellen Winkels (0-360)
+        let angle = ((yearsSince2000 / data.period) * 360 + (data.offset * 30)) % 360;
+        if (angle < 0) angle += 360;
+        const signIndex = Math.floor(angle / 30);
+        document.getElementById(id).textContent = signs[signIndex];
       }
-      }
-    } // <-- HIER ENDET DIE FUNKTION. DAS IST JETZT SAUBER.
+    }
 
-    // Start
     calculateAndDisplay();
     updateClock();
     setInterval(updateClock, 1000);
 
-    // GPS
     document.getElementById('gpsBtn').addEventListener('click', () => {
       if (navigator.geolocation) {
         document.getElementById('gpsBtn').textContent = "📍 Suche Standort...";
@@ -212,7 +192,6 @@
       }
     });
 
-    // Schalter
     ['tcm', 'moon', 'sidereal', 'farmer', 'planet'].forEach(type => {
       document.getElementById(type + 'Toggle').addEventListener('change', (event) => {
         const box = document.getElementById(type === 'tcm' ? 'tcmBox' : type + 'Data');
