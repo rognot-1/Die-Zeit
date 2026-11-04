@@ -162,9 +162,25 @@
       const plantDays = ["Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"];
       document.getElementById('farmerDay').textContent = plantDays[zodiacIndex];
 
+      // Planeten (Astronomy Engine)
+      if (typeof Astronomy !== 'undefined') {
+        const signs = ["Widder", "Stier", "Zwillinge", "Krebs", "Löwe", "Jungfrau", "Waage", "Skorpion", "Schütze", "Steinbock", "Wassermann", "Fische"];
+        const planetMap = {
+          'planetJupiter': Astronomy.Body.Jupiter,
+          'planetSaturn': Astronomy.Body.Saturn,
+          'planetMars': Astronomy.Body.Mars,
+          'planetVenus': Astronomy.Body.Venus
+        };
+        for (const [elementId, planet] of Object.entries(planetMap)) {
+          try {
+            const eq = Astronomy.Equator(planet, now, new Astronomy.Observer(lat, lng, 0), true, true);
+            const ecl = Astronomy.Ecliptic(eq.ra, eq.dec);
+            const signIndex = Math.floor(ecl.elon / 30);
+            document.getElementById(elementId).textContent = signs[signIndex];
+          } catch (e) {}
+        }
       }
-      }
-    }
+    } // <-- HIER ENDET DIE FUNKTION. DAS IST JETZT SAUBER.
 
     // Start
     calculateAndDisplay();
