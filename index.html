@@ -15,78 +15,70 @@
 </head>
 <body>
   <h1>Zeitmesser</h1>
-  <p style="color: red; font-size: 2rem;">ES FUNKTIONIERT!</p>
-    <!-- NEU: Steuerungsmenü für die Ebenen -->
-  <div style="background: #1f1f35; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333;">
-    <span style="color: #aaa; font-size: 0.9rem;">Ebenen anzeigen:</span>
-      <div style="display: flex; gap: 1rem; align-items: center;">
-      <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
-        <input type="checkbox" id="tcmToggle" checked style="width: 1.2rem; height: 1.2rem; accent-color: #ffaa00;">
-        <span>TCM</span>
-      </label>
-      <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
-        <input type="checkbox" id="moonToggle" checked style="width: 1.2rem; height: 1.2rem; accent-color: #ccc;">
-        <span>Mond</span>
-      </label>
-              <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
-        <input type="checkbox" id="siderealToggle" checked style="width: 1.2rem; height: 1.2rem; accent-color: #ffaa00;">
-        <span>Sternzeit</span>
-      </label>
-              <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
-        <input type="checkbox" id="farmerToggle" checked style="width: 1.2rem; height: 1.2rem; accent-color: #4caf50;">
-        <span>Bauernkalender</span>
-      </label>
-    </div>
-  </div>
-    <div id="tcmBox" style="background: #252540; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem; border-left: 4px solid #ffaa00;">
-    <div style="color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Aktuelle TCM-Organzeit</div>
-    <div id="tcmOrgan" style="font-size: 1.5rem; font-weight: bold; color: #ffaa00; margin-top: 0.3rem;">Berechne...</div>
-  </div>
-  <p style="color: #888;">Mellingen, CH · 47.42°N, 8.27°E</p>
+  <p id="locationDisplay" style="color: #888;">Mellingen, CH · 47.42°N, 8.27°E</p>
 
-  <!-- NEU: Die live Uhr -->
   <div style="text-align: center; margin: 1.5rem 0;">
     <div id="liveClock" style="font-size: 3rem; font-weight: 300; font-variant-numeric: tabular-nums;">--:--:--</div>
     <div id="liveDate" style="color: #aaa; font-size: 1.1rem; margin-top: 0.3rem;">Lade Datum...</div>
   </div>
 
-  <!-- NEU: Der GPS Button -->
   <div style="text-align: center; margin-bottom: 1.5rem;">
-    <button id="gpsBtn" style="background: #333; color: #fff; border: 1px solid #555; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">
-      📍 Aktuellen Standort verwenden
-    </button>
+    <button id="gpsBtn" style="background: #333; color: #fff; border: 1px solid #555; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">📍 Aktuellen Standort verwenden</button>
   </div>
 
+  <!-- Ebenen-Menü -->
+  <div style="background: #1f1f35; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 0.8rem; justify-content: center; border: 1px solid #333;">
+    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+      <input type="checkbox" id="tcmToggle" checked style="accent-color: #ffaa00;"> <span>TCM</span>
+    </label>
+    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+      <input type="checkbox" id="moonToggle" checked style="accent-color: #ccc;"> <span>Mond</span>
+    </label>
+    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+      <input type="checkbox" id="siderealToggle" checked style="accent-color: #ffaa00;"> <span>Sternzeit</span>
+    </label>
+    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+      <input type="checkbox" id="farmerToggle" checked style="accent-color: #4caf50;"> <span>Bauernkalender</span>
+    </label>
+  </div>
+
+  <!-- TCM -->
+  <div id="tcmBox" style="background: #252540; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem; border-left: 4px solid #ffaa00;">
+    <div style="color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Aktuelle TCM-Organzeit</div>
+    <div id="tcmOrgan" style="font-size: 1.5rem; font-weight: bold; color: #ffaa00; margin-top: 0.3rem;">Berechne...</div>
+  </div>
+
+  <!-- Sonne & Mond -->
   <div class="row"><span class="label">Sonnenaufgang</span><span class="value" id="sunrise">–</span></div>
   <div class="row"><span class="label">Sonnenhöchststand</span><span class="value" id="solarNoon">–</span></div>
   <div class="row"><span class="label">Sonnenuntergang</span><span class="value" id="sunset">–</span></div>
   <div class="row"><span class="label">Tageslänge</span><span class="value" id="dayLength">–</span></div>
-   <div id="moonData">
+  
+  <div id="moonData">
     <div class="row"><span class="label">Mondphase</span><span class="value" id="moonPhase">–</span></div>
     <div class="row"><span class="label">Mondaufgang</span><span class="value" id="moonrise">–</span></div>
     <div class="row"><span class="label">Monduntergang</span><span class="value" id="moonset">–</span></div>
   </div>
-    <div id="siderealData">
+
+  <div id="siderealData">
     <div class="row"><span class="label">Lokale Sternzeit</span><span class="value" id="siderealTime">–</span></div>
   </div>
-        <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
-        <input type="checkbox" id="farmerToggle" checked style="width: 1.2rem; height: 1.2rem; accent-color: #4caf50;">
-        <span>Bauernkalender</span>
-      </label>
+
+  <div id="farmerData">
+    <div class="row"><span class="label">Mondpflanzentag</span><span class="value" id="farmerDay" style="color: #4caf50; font-weight: bold;">–</span></div>
+  </div>
+
   <script>
-    // Variablen für den Standort
     let lat = 47.42, lng = 8.27;
     let locationName = "Mellingen, CH";
 
-    // Funktion zur Berechnung der Himmelsdaten
     function calculateAndDisplay() {
-      
       const now = new Date();
       const times = SunCalc.getTimes(now, lat, lng);
       const moonIllum = SunCalc.getMoonIllumination(now);
+      const moonTimes = SunCalc.getMoonTimes(now, lat, lng);
 
-      // Ortsnamen im HTML aktualisieren
-      document.querySelector('p[style*="color: #888"]').textContent = `${locationName} · ${lat.toFixed(2)}°N, ${lng.toFixed(2)}°E`;
+      document.getElementById('locationDisplay').textContent = `${locationName} · ${lat.toFixed(2)}°N, ${lng.toFixed(2)}°E`;
 
       function formatTime(date) {
         if (!date || isNaN(date)) return '–';
@@ -96,213 +88,90 @@
       document.getElementById('sunrise').textContent = formatTime(times.sunrise);
       document.getElementById('solarNoon').textContent = formatTime(times.solarNoon);
       document.getElementById('sunset').textContent = formatTime(times.sunset);
-            // --- NEU: Mondauf- und -untergang berechnen ---
-      const moonTimes = SunCalc.getMoonTimes(now, lat, lng);
-      document.getElementById('moonrise').textContent = formatTime(moonTimes.rise);
-      document.getElementById('moonset').textContent = formatTime(moonTimes.set);
 
       if (times.sunrise && times.sunset) {
         const diffMs = times.sunset - times.sunrise;
         const hours = Math.floor(diffMs / 3600000);
         const minutes = Math.floor((diffMs % 3600000) / 60000);
         document.getElementById('dayLength').textContent = `${hours}h ${minutes}min`;
-              const moonTimes = SunCalc.getMoonTimes(now, lat, lng);
-      document.getElementById('moonrise').textContent = formatTime(moonTimes.rise);
-      document.getElementById('moonset').textContent = formatTime(moonTimes.set);
-              // --- NEU: Lokale Sternzeit berechnen ---
-      // 1. Julianisches Datum berechnen (Tage seit 1.1.2000, 12:00 UTC)
-      const jd = (now.getTime() / 86400000) + 2440587.5;
-      const d = jd - 2451545.0;
-
-      // 2. Greenwich Mean Sidereal Time (GMST) in Grad berechnen
-      let gmst = 280.46061837 + 360.98564736629 * d;
-      gmst = gmst % 360; 
-      if (gmst < 0) gmst += 360;
-
-      // 3. Längengrad anpassen (für den lokalen Standort)
-      let lst = gmst + lng;
-      lst = lst % 360;
-      if (lst < 0) lst += 360;
-
-      // 4. Grad in Stunden, Minuten und Sekunden umrechnen
-      const totalSeconds = (lst / 15) * 3600; // 360 Grad = 24 Stunden
-      const h = Math.floor(totalSeconds / 3600);
-      const m = Math.floor((totalSeconds % 3600) / 60);
-      const s = Math.floor(totalSeconds % 60);
-
-      // 5. Formatieren (z.B. "14h 32m 18s")
-      const formattedSidereal = `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
-      document.getElementById('siderealTime').textContent = formattedSidereal;
       }
 
       const phasePercent = Math.round(moonIllum.fraction * 100);
       document.getElementById('moonPhase').textContent = `${phasePercent}% beleuchtet`;
+      document.getElementById('moonrise').textContent = formatTime(moonTimes.rise);
+      document.getElementById('moonset').textContent = formatTime(moonTimes.set);
     }
 
-    // Die Berechnung einmal beim Laden der Seite starten
-    calculateAndDisplay();
-
-    // --- Live Uhr und Datum ---
     function updateClock() {
       const now = new Date();
-            // --- NEU: TCM Organuhr berechnen ---
-      // Wir holen uns die aktuelle Stunde in der Schweiz
-      const currentHourString = now.toLocaleTimeString('de-CH', { hour: '2-digit', hour12: false, timeZone: 'Europe/Zurich' });
-      const currentHour = parseInt(currentHourString);
+      
+      document.getElementById('liveClock').textContent = now.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Zurich' });
+      document.getElementById('liveDate').textContent = now.toLocaleDateString('de-CH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Europe/Zurich' });
 
-      // Das Mapping der Organe zu den Doppelstunden
+      // TCM
+      const currentHour = parseInt(now.toLocaleTimeString('de-CH', { hour: '2-digit', hour12: false, timeZone: 'Europe/Zurich' }));
       const organs = [
-        { start: 23, name: "Gallenblase (GB)" },
-        { start: 1,  name: "Leber (LE)" },
-        { start: 3,  name: "Lunge (LU)" },
-        { start: 5,  name: "Dickdarm (DI)" },
-        { start: 7,  name: "Magen (MA)" },
-        { start: 9,  name: "Milz (MP)" },
-        { start: 11, name: "Herz (HE)" },
-        { start: 13, name: "Dünndarm (DÜ)" },
-        { start: 15, name: "Blase (BL)" },
-        { start: 17, name: "Niere (NI)" },
-        { start: 19, name: "Perikard (PE)" },
-        { start: 21, name: "Sanjiao (3E)" }
+        { start: 23, name: "Gallenblase (GB)" }, { start: 1, name: "Leber (LE)" }, { start: 3, name: "Lunge (LU)" }, { start: 5, name: "Dickdarm (DI)" },
+        { start: 7, name: "Magen (MA)" }, { start: 9, name: "Milz (MP)" }, { start: 11, name: "Herz (HE)" }, { start: 13, name: "Dünndarm (DÜ)" },
+        { start: 15, name: "Blase (BL)" }, { start: 17, name: "Niere (NI)" }, { start: 19, name: "Perikard (PE)" }, { start: 21, name: "Sanjiao (3E)" }
       ];
-
-      // Wir suchen das passende Organ für die aktuelle Stunde
       let currentOrgan = "Unbekannt";
       for (let i = 0; i < organs.length; i++) {
         let current = organs[i];
-        let next = organs[(i + 1) % organs.length]; // Das nächste Organ (oder wieder das erste)
-        
-        // Prüfen, ob die aktuelle Stunde in dieses Zeitfenster fällt
+        let next = organs[(i + 1) % organs.length];
         if (current.start < next.start) {
-          if (currentHour >= current.start && currentHour < next.start) {
-            currentOrgan = current.name;
-            break;
-          }
+          if (currentHour >= current.start && currentHour < next.start) { currentOrgan = current.name; break; }
         } else {
-          // Spezialfall für Mitternacht (23 Uhr bis 1 Uhr)
-          if (currentHour >= current.start || currentHour < next.start) {
-            currentOrgan = current.name;
-            break;
-          }
+          if (currentHour >= current.start || currentHour < next.start) { currentOrgan = current.name; break; }
         }
       }
-
       document.getElementById('tcmOrgan').textContent = currentOrgan;
-      
-      const timeString = now.toLocaleTimeString('de-CH', { 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit',
-        timeZone: 'Europe/Zurich' 
-      });
-      
-      const dateString = now.toLocaleDateString('de-CH', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        timeZone: 'Europe/Zurich'
-      });
 
-      document.getElementById('liveClock').textContent = timeString;
-      document.getElementById('liveDate').textContent = dateString;
-            // --- NEU: Lokale Sternzeit berechnen (tickend) ---
+      // Sternzeit
       const jd = (now.getTime() / 86400000) + 2440587.5;
       const d = jd - 2451545.0;
       let gmst = 280.46061837 + 360.98564736629 * d;
-      gmst = gmst % 360; 
-      if (gmst < 0) gmst += 360;
-      let lst = gmst + lng;
-      lst = lst % 360;
-      if (lst < 0) lst += 360;
+      gmst = gmst % 360; if (gmst < 0) gmst += 360;
+      let lst = gmst + lng; lst = lst % 360; if (lst < 0) lst += 360;
       const totalSeconds = (lst / 15) * 3600;
-      const h = Math.floor(totalSeconds / 3600);
-      const m = Math.floor((totalSeconds % 3600) / 60);
-      const s = Math.floor(totalSeconds % 60);
-      const formattedSidereal = `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
-      document.getElementById('siderealTime').textContent = formattedSidereal;
-            // --- NEU: Mondpflanzentag berechnen ---
-      const T = (now.getTime() / 86400000) + 2440587.5;
-      const d2 = T - 2451545.0;
+      const h = Math.floor(totalSeconds / 3600); const m = Math.floor((totalSeconds % 3600) / 60); const s = Math.floor(totalSeconds % 60);
+      document.getElementById('siderealTime').textContent = `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+
+      // Bauernkalender
+      const T = jd; const d2 = T - 2451545.0;
       let moonLon = 218.32 + 13.176396 * d2 + 6.29 * Math.sin((134.9 + 13.064993 * d2) * Math.PI / 180);
-      moonLon = moonLon % 360;
-      if (moonLon < 0) moonLon += 360;
-
+      moonLon = moonLon % 360; if (moonLon < 0) moonLon += 360;
       const zodiacIndex = Math.floor(moonLon / 30);
-
-      const plantDays = [
-        "Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", 
-        "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", 
-        "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", 
-        "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"
-      ];
-
-      const currentPlantDay = plantDays[zodiacIndex];
-      document.getElementById('farmerDay').textContent = currentPlantDay;
+      const plantDays = ["Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"];
+      document.getElementById('farmerDay').textContent = plantDays[zodiacIndex];
     }
 
+    calculateAndDisplay();
     updateClock();
     setInterval(updateClock, 1000);
 
-    // --- GPS-Standort abfragen ---
+    // GPS
     document.getElementById('gpsBtn').addEventListener('click', () => {
       if (navigator.geolocation) {
         document.getElementById('gpsBtn').textContent = "📍 Suche Standort...";
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            lat = position.coords.latitude;
-            lng = position.coords.longitude;
+        navigator.geolocation.getCurrentPosition((position) => {
+            lat = position.coords.latitude; lng = position.coords.longitude;
             locationName = "Aktueller Standort";
             document.getElementById('gpsBtn').textContent = "📍 Standort aktualisiert!";
-            calculateAndDisplay();
-            updateClock();
-          },
-          (error) => {
+            calculateAndDisplay(); updateClock();
+          }, (error) => {
             document.getElementById('gpsBtn').textContent = "📍 Standort verweigert";
-            console.error("GPS Fehler:", error);
-          }
-        );
-      } else {
-        alert("Dein Browser unterstützt kein GPS.");
-      }
-    });
-        // --- NEU: Ebenen ein- und ausblenden ---
-    document.getElementById('tcmToggle').addEventListener('change', (event) => {
-      const tcmBox = document.getElementById('tcmBox');
-      if (event.target.checked) {
-        tcmBox.style.display = 'block'; // Kasten anzeigen
-      } else {
-        tcmBox.style.display = 'none';  // Kasten verstecken
-      }
-          document.getElementById('moonToggle').addEventListener('change', (event) => {
-      const moonData = document.getElementById('moonData');
-      if (event.target.checked) {
-        moonData.style.display = 'block';
-      } else {
-        moonData.style.display = 'none';
-      }
-    });
-          // Schalter für die Sternzeit
-    document.getElementById('siderealToggle').addEventListener('change', (event) => {
-      const siderealData = document.getElementById('siderealData');
-      if (event.target.checked) {
-        siderealData.style.display = 'block';
-      } else {
-        siderealData.style.display = 'none';
+          });
       }
     });
 
-    // Schalter für den Bauernkalender
-    document.getElementById('farmerToggle').addEventListener('change', (event) => {
-      const farmerData = document.getElementById('farmerData');
-      if (event.target.checked) {
-        farmerData.style.display = 'block';
-      } else {
-        farmerData.style.display = 'none';
-      }
-    });
+    // Schalter
+    ['tcm', 'moon', 'sidereal', 'farmer'].forEach(type => {
+      document.getElementById(type + 'Toggle').addEventListener('change', (event) => {
+        const box = document.getElementById(type === 'tcm' ? 'tcmBox' : type + 'Data');
+        if (box) box.style.display = event.target.checked ? 'block' : 'none';
+      });
     });
   </script>
 </body>
 </html>
-
