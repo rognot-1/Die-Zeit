@@ -15,6 +15,10 @@
 </head>
 <body>
   <h1>Zeitmesser</h1>
+    <div style="background: #252540; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem; border-left: 4px solid #ffaa00;">
+    <div style="color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Aktuelle TCM-Organzeit</div>
+    <div id="tcmOrgan" style="font-size: 1.5rem; font-weight: bold; color: #ffaa00; margin-top: 0.3rem;">Berechne...</div>
+  </div>
   <p style="color: #888;">Mellingen, CH · 47.42°N, 8.27°E</p>
 
   <!-- NEU: Die live Uhr -->
@@ -76,6 +80,49 @@
     // --- Live Uhr und Datum ---
     function updateClock() {
       const now = new Date();
+            // --- NEU: TCM Organuhr berechnen ---
+      // Wir holen uns die aktuelle Stunde in der Schweiz
+      const currentHourString = now.toLocaleTimeString('de-CH', { hour: '2-digit', hour12: false, timeZone: 'Europe/Zurich' });
+      const currentHour = parseInt(currentHourString);
+
+      // Das Mapping der Organe zu den Doppelstunden
+      const organs = [
+        { start: 23, name: "Gallenblase (GB)" },
+        { start: 1,  name: "Leber (LE)" },
+        { start: 3,  name: "Lunge (LU)" },
+        { start: 5,  name: "Dickdarm (DI)" },
+        { start: 7,  name: "Magen (MA)" },
+        { start: 9,  name: "Milz (MP)" },
+        { start: 11, name: "Herz (HE)" },
+        { start: 13, name: "Dünndarm (DÜ)" },
+        { start: 15, name: "Blase (BL)" },
+        { start: 17, name: "Niere (NI)" },
+        { start: 19, name: "Perikard (PE)" },
+        { start: 21, name: "Sanjiao (3E)" }
+      ];
+
+      // Wir suchen das passende Organ für die aktuelle Stunde
+      let currentOrgan = "Unbekannt";
+      for (let i = 0; i < organs.length; i++) {
+        let current = organs[i];
+        let next = organs[(i + 1) % organs.length]; // Das nächste Organ (oder wieder das erste)
+        
+        // Prüfen, ob die aktuelle Stunde in dieses Zeitfenster fällt
+        if (current.start < next.start) {
+          if (currentHour >= current.start && currentHour < next.start) {
+            currentOrgan = current.name;
+            break;
+          }
+        } else {
+          // Spezialfall für Mitternacht (23 Uhr bis 1 Uhr)
+          if (currentHour >= current.start || currentHour < next.start) {
+            currentOrgan = current.name;
+            break;
+          }
+        }
+      }
+
+      document.getElementById('tcmOrgan').textContent = currentOrgan;
       
       const timeString = now.toLocaleTimeString('de-CH', { 
         hour: '2-digit', 
