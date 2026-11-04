@@ -18,10 +18,16 @@
     <!-- NEU: Steuerungsmenü für die Ebenen -->
   <div style="background: #1f1f35; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333;">
     <span style="color: #aaa; font-size: 0.9rem;">Ebenen anzeigen:</span>
-    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
-      <input type="checkbox" id="tcmToggle" checked style="width: 1.2rem; height: 1.2rem; accent-color: #ffaa00;">
-      <span>TCM-Organuhr</span>
-    </label>
+      <div style="display: flex; gap: 1rem; align-items: center;">
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+        <input type="checkbox" id="tcmToggle" checked style="width: 1.2rem; height: 1.2rem; accent-color: #ffaa00;">
+        <span>TCM</span>
+      </label>
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
+        <input type="checkbox" id="moonToggle" checked style="width: 1.2rem; height: 1.2rem; accent-color: #ccc;">
+        <span>Mond</span>
+      </label>
+    </div>
   </div>
     <div id="tcmBox" style="background: #252540; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem; border-left: 4px solid #ffaa00;">
     <div style="color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Aktuelle TCM-Organzeit</div>
@@ -46,8 +52,11 @@
   <div class="row"><span class="label">Sonnenhöchststand</span><span class="value" id="solarNoon">–</span></div>
   <div class="row"><span class="label">Sonnenuntergang</span><span class="value" id="sunset">–</span></div>
   <div class="row"><span class="label">Tageslänge</span><span class="value" id="dayLength">–</span></div>
-  <div class="row"><span class="label">Mondphase</span><span class="value" id="moonPhase">–</span></div>
-
+   <div id="moonData">
+    <div class="row"><span class="label">Mondphase</span><span class="value" id="moonPhase">–</span></div>
+    <div class="row"><span class="label">Mondaufgang</span><span class="value" id="moonrise">–</span></div>
+    <div class="row"><span class="label">Monduntergang</span><span class="value" id="moonset">–</span></div>
+  </div>
   <script>
     // Variablen für den Standort
     let lat = 47.42, lng = 8.27;
@@ -70,12 +79,19 @@
       document.getElementById('sunrise').textContent = formatTime(times.sunrise);
       document.getElementById('solarNoon').textContent = formatTime(times.solarNoon);
       document.getElementById('sunset').textContent = formatTime(times.sunset);
+            // --- NEU: Mondauf- und -untergang berechnen ---
+      const moonTimes = SunCalc.getMoonTimes(now, lat, lng);
+      document.getElementById('moonrise').textContent = formatTime(moonTimes.rise);
+      document.getElementById('moonset').textContent = formatTime(moonTimes.set);
 
       if (times.sunrise && times.sunset) {
         const diffMs = times.sunset - times.sunrise;
         const hours = Math.floor(diffMs / 3600000);
         const minutes = Math.floor((diffMs % 3600000) / 60000);
         document.getElementById('dayLength').textContent = `${hours}h ${minutes}min`;
+              const moonTimes = SunCalc.getMoonTimes(now, lat, lng);
+      document.getElementById('moonrise').textContent = formatTime(moonTimes.rise);
+      document.getElementById('moonset').textContent = formatTime(moonTimes.set);
       }
 
       const phasePercent = Math.round(moonIllum.fraction * 100);
@@ -183,6 +199,14 @@
       } else {
         tcmBox.style.display = 'none';  // Kasten verstecken
       }
+          document.getElementById('moonToggle').addEventListener('change', (event) => {
+      const moonData = document.getElementById('moonData');
+      if (event.target.checked) {
+        moonData.style.display = 'block';
+      } else {
+        moonData.style.display = 'none';
+      }
+    });
     });
   </script>
 </body>
