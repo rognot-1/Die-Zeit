@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Zeitmesser – Mellingen</title>
   <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@swisseph/browser@0.1.0/dist/swisseph.js"></script>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 500px; margin: 2rem auto; padding: 0 1rem; background: #1a1a2e; color: #eaeaea; }
@@ -154,29 +155,31 @@
       const zodiacIndex = Math.floor(moonLon / 30);
       const plantDays = ["Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"];
       document.getElementById('farmerDay').textContent = plantDays[zodiacIndex];
-            // --- NEU: Planeten berechnen ---
-      if (typeof SwissEphemeris !== 'undefined' && !window.sweReady) {
-        window.sweReady = true;
-        const swe = new SwissEphemeris();
-        swe.init().then(() => {
-          window.sweInstance = swe;
-          // Nach dem Init die Planeten einmalig berechnen
-          const jd = swe.dateToJulianDay(now);
-          const planetMap = {
-            'planetJupiter': swe.Planet.Jupiter,
-            'planetSaturn': swe.Planet.Saturn,
-            'planetMars': swe.Planet.Mars,
-            'planetVenus': swe.Planet.Venus
-          };
-          const signs = ["Widder", "Stier", "Zwillinge", "Krebs", "Löwe", "Jungfrau", "Waage", "Skorpion", "Schütze", "Steinbock", "Wassermann", "Fische"];
-          for (const [elementId, planet] of Object.entries(planetMap)) {
-            try {
-              const pos = swe.calculatePosition(jd, planet);
-              const signIndex = Math.floor(pos.longitude / 30);
-              document.getElementById(elementId).textContent = signs[signIndex];
-            } catch (e) {
-              console.warn("Planet Fehler:", e);
-            }
+                // --- NEU: Planeten berechnen (Astronomy Engine) ---
+      if (typeof Astronomy !== 'undefined') {
+        const signs = ["Widder", "Stier", "Zwillinge", "Krebs", "Löwe", "Jungfrau", "Waage", "Skorpion", "Schütze", "Steinbock", "Wassermann", "Fische"];
+        
+        // Wir berechnen die ekliptikale Länge für jeden Planeten
+        const planetMap = {
+          'planetJupiter': Astronomy.Body.Jupiter,
+          'planetSaturn': Astronomy.Body.Saturn,
+          'planetMars': Astronomy.Body.Mars,
+          'planetVenus': Astronomy.Body.Venus
+        };
+
+        for (const [elementId, planet] of Object.entries(planetMap)) {
+          try {
+            // Aktuelle Position (Äquator-Koordinaten)
+            const eq = Astronomy.Equator(planet, now, new Astronomy.Observer(lat, lng, 0), true, true);
+            // Ekliptikale Länge berechnen (für das Tierkreiszeichen)
+            const ecl = Astronomy.Ecliptic(eq.ra, eq.dec);
+            const signIndex = Math.floor(ecl.elon / 30);
+            document.getElementById(elementId).textContent = signs[signIndex];
+          } catch (e) {
+            console.warn("Planet Fehler:", e);
+          }
+        }
+      }
           }
         });
       }
