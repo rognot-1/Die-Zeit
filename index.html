@@ -15,47 +15,6 @@
 </head>
 <body>
   <h1>Zeitmesser</h1>
-   <div style="text-align: center; margin: 1.5rem 0;">
-    <div id="liveClock" style="font-size: 3rem; font-weight: 300; font-variant-numeric: tabular-nums;">--:--:--</div>
-    <div id="liveDate" style="color: #aaa; font-size: 1.1rem; margin-top: 0.3rem;">Lade Datum...</div>
-  </div>
-
-  <div class="row"><span class="label">Sonnenaufgang</span><span class="value" id="sunrise">–</span></div>
-  <div class="row"><span class="label">Sonnenhöchststand</span><span class="value" id="solarNoon">–</span></div>
-  <div class="row"><span class="label">Sonnenuntergang</span><span class="value" id="sunset">–</span></div>
-  <div class="row"><span class="label">Tageslänge</span><span class="value" id="dayLength">–</span></div>
-  <div class="row"><span class="label">Mondphase</span><span class="value" id="moonPhase">–</span></div>
-
-  <script>
-        let lat = 47.42, lng = 8.27;
-    let locationName = "Mellingen, CH";
-    const now = new Date();
-    const times = SunCalc.getTimes(now, lat, lng);
-    const moonIllum = SunCalc.getMoonIllumination(now);
-
-    function formatTime(date) {
-      if (!date || isNaN(date)) return '–';
-      return date.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich' });
-    }
-
-    document.getElementById('sunrise').textContent = formatTime(times.sunrise);
-    <!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zeitmesser – Mellingen</title>
-  <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 500px; margin: 2rem auto; padding: 0 1rem; background: #1a1a2e; color: #eaeaea; }
-    h1 { font-weight: 300; letter-spacing: 0.05em; }
-    .row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333; }
-    .label { color: #aaa; }
-    .value { font-variant-numeric: tabular-nums; }
-  </style>
-</head>
-<body>
-  <h1>Zeitmesser</h1>
   <p style="color: #888;">Mellingen, CH · 47.42°N, 8.27°E</p>
 
   <!-- NEU: Die live Uhr -->
@@ -161,44 +120,6 @@
         alert("Dein Browser unterstützt kein GPS.");
       }
     });
-  </script>
-</body>
-</html>
-
-       // --- NEU: Live Uhr und Datum ---
-    function updateClock() {
-      const now = new Date();
-      
-      // Uhrzeit formatieren
-      const timeString = now.toLocaleTimeString('de-CH', { 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit',
-        timeZone: 'Europe/Zurich' 
-      });
-      
-      // Datum formatieren (z.B. "Mittwoch, 4. November 2026")
-      const dateString = now.toLocaleDateString('de-CH', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        timeZone: 'Europe/Zurich'
-      });
-
-      // In die Webseite schreiben
-      document.getElementById('liveClock').textContent = timeString;
-      document.getElementById('liveDate').textContent = dateString;
-    }
-
-    // Die Uhr sofort starten und dann jede Sekunde aktualisieren
-    updateClock();
-    setInterval(updateClock, 1000);
-      <div style="text-align: center; margin-bottom: 1.5rem;">
-    <button id="gpsBtn" style="background: #333; color: #fff; border: 1px solid #555; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">
-      📍 Aktuellen Standort verwenden
-    </button>
-  </div>
   </script>
 </body>
 </html>
