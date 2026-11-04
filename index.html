@@ -15,7 +15,10 @@
 </head>
 <body>
   <h1>Zeitmesser</h1>
-  <p style="color: #888;">Mellingen, CH · 47.42°N, 8.27°E</p>
+   <div style="text-align: center; margin: 1.5rem 0;">
+    <div id="liveClock" style="font-size: 3rem; font-weight: 300; font-variant-numeric: tabular-nums;">--:--:--</div>
+    <div id="liveDate" style="color: #aaa; font-size: 1.1rem; margin-top: 0.3rem;">Lade Datum...</div>
+  </div>
 
   <div class="row"><span class="label">Sonnenaufgang</span><span class="value" id="sunrise">–</span></div>
   <div class="row"><span class="label">Sonnenhöchststand</span><span class="value" id="solarNoon">–</span></div>
@@ -45,8 +48,35 @@
       document.getElementById('dayLength').textContent = `${hours}h ${minutes}min`;
     }
 
-    const phasePercent = Math.round(moonIllum.fraction * 100);
-    document.getElementById('moonPhase').textContent = `${phasePercent}% beleuchtet`;
+       // --- NEU: Live Uhr und Datum ---
+    function updateClock() {
+      const now = new Date();
+      
+      // Uhrzeit formatieren
+      const timeString = now.toLocaleTimeString('de-CH', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit',
+        timeZone: 'Europe/Zurich' 
+      });
+      
+      // Datum formatieren (z.B. "Mittwoch, 4. November 2026")
+      const dateString = now.toLocaleDateString('de-CH', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        timeZone: 'Europe/Zurich'
+      });
+
+      // In die Webseite schreiben
+      document.getElementById('liveClock').textContent = timeString;
+      document.getElementById('liveDate').textContent = dateString;
+    }
+
+    // Die Uhr sofort starten und dann jede Sekunde aktualisieren
+    updateClock();
+    setInterval(updateClock, 1000);
   </script>
 </body>
 </html>
