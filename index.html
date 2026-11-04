@@ -154,17 +154,32 @@
       const zodiacIndex = Math.floor(moonLon / 30);
       const plantDays = ["Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"];
       document.getElementById('farmerDay').textContent = plantDays[zodiacIndex];
-        // --- NEU: Planeten berechnen ---
-  if (typeof SwissEphemeris !== 'undefined') {
-    const swe = new SwissEphemeris();
-    swe.init().then(() => {
-      const jd = swe.dateToJulianDay(now);
-      const planetMap = {
-        'planetJupiter': swe.Planet.Jupiter,
-        'planetSaturn': swe.Planet.Saturn,
-        'planetMars': swe.Planet.Mars,
-        'planetVenus': swe.Planet.Venus
-      };
+            // --- NEU: Planeten berechnen ---
+      if (typeof SwissEphemeris !== 'undefined' && !window.sweReady) {
+        window.sweReady = true;
+        const swe = new SwissEphemeris();
+        swe.init().then(() => {
+          window.sweInstance = swe;
+          // Nach dem Init die Planeten einmalig berechnen
+          const jd = swe.dateToJulianDay(now);
+          const planetMap = {
+            'planetJupiter': swe.Planet.Jupiter,
+            'planetSaturn': swe.Planet.Saturn,
+            'planetMars': swe.Planet.Mars,
+            'planetVenus': swe.Planet.Venus
+          };
+          const signs = ["Widder", "Stier", "Zwillinge", "Krebs", "Löwe", "Jungfrau", "Waage", "Skorpion", "Schütze", "Steinbock", "Wassermann", "Fische"];
+          for (const [elementId, planet] of Object.entries(planetMap)) {
+            try {
+              const pos = swe.calculatePosition(jd, planet);
+              const signIndex = Math.floor(pos.longitude / 30);
+              document.getElementById(elementId).textContent = signs[signIndex];
+            } catch (e) {
+              console.warn("Planet Fehler:", e);
+            }
+          }
+        });
+      }
       for (const [elementId, planet] of Object.entries(planetMap)) {
         try {
           const pos = swe.calculatePosition(jd, planet);
