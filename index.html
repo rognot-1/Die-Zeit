@@ -15,7 +15,15 @@
 </head>
 <body>
   <h1>Zeitmesser</h1>
-    <div style="background: #252540; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem; border-left: 4px solid #ffaa00;">
+    <!-- NEU: Steuerungsmenü für die Ebenen -->
+  <div style="background: #1f1f35; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333;">
+    <span style="color: #aaa; font-size: 0.9rem;">Ebenen anzeigen:</span>
+    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+      <input type="checkbox" id="tcmToggle" checked style="width: 1.2rem; height: 1.2rem; accent-color: #ffaa00;">
+      <span>TCM-Organuhr</span>
+    </label>
+  </div>
+    <div id="tcmBox" style="background: #252540; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem; border-left: 4px solid #ffaa00;">
     <div style="color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Aktuelle TCM-Organzeit</div>
     <div id="tcmOrgan" style="font-size: 1.5rem; font-weight: bold; color: #ffaa00; margin-top: 0.3rem;">Berechne...</div>
   </div>
@@ -165,6 +173,15 @@
         );
       } else {
         alert("Dein Browser unterstützt kein GPS.");
+      }
+    });
+        // --- NEU: Ebenen ein- und ausblenden ---
+    document.getElementById('tcmToggle').addEventListener('change', (event) => {
+      const tcmBox = document.getElementById('tcmBox');
+      if (event.target.checked) {
+        tcmBox.style.display = 'block'; // Kasten anzeigen
+      } else {
+        tcmBox.style.display = 'none';  // Kasten verstecken
       }
     });
   </script>
