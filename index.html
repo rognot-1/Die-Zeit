@@ -3,16 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zeitmesser – Mellingen</title>
+  <title>Zeitmesser – Die-Zeit</title>
+  
+  <!-- Bibliotheken -->
   <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.browser.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@swisseph/browser@0.1.0/dist/swisseph.js"></script>
+
   <style>
     body { font-family: system-ui, sans-serif; max-width: 500px; margin: 2rem auto; padding: 0 1rem; background: #1a1a2e; color: #eaeaea; }
     h1 { font-weight: 300; letter-spacing: 0.05em; }
     .row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333; }
     .label { color: #aaa; }
     .value { font-variant-numeric: tabular-nums; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
@@ -43,8 +46,8 @@
       <input type="checkbox" id="farmerToggle" checked style="accent-color: #4caf50;"> <span>Bauernkalender</span>
     </label>
     <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;">
-  <input type="checkbox" id="planetToggle" checked style="accent-color: #00bcd4;"> <span>Planeten</span>
-</label>
+      <input type="checkbox" id="planetToggle" checked style="accent-color: #00bcd4;"> <span>Planeten</span>
+    </label>
   </div>
 
   <!-- TCM -->
@@ -72,17 +75,19 @@
   <div id="farmerData">
     <div class="row"><span class="label">Mondpflanzentag</span><span class="value" id="farmerDay" style="color: #4caf50; font-weight: bold;">–</span></div>
   </div>
+
   <div id="planetData">
-  <div class="row"><span class="label">Jupiter</span><span class="value" id="planetJupiter">–</span></div>
-  <div class="row"><span class="label">Saturn</span><span class="value" id="planetSaturn">–</span></div>
-  <div class="row"><span class="label">Mars</span><span class="value" id="planetMars">–</span></div>
-  <div class="row"><span class="label">Venus</span><span class="value" id="planetVenus">–</span></div>
-</div>
+    <div class="row"><span class="label">Jupiter</span><span class="value" id="planetJupiter">–</span></div>
+    <div class="row"><span class="label">Saturn</span><span class="value" id="planetSaturn">–</span></div>
+    <div class="row"><span class="label">Mars</span><span class="value" id="planetMars">–</span></div>
+    <div class="row"><span class="label">Venus</span><span class="value" id="planetVenus">–</span></div>
+  </div>
 
   <script>
     let lat = 47.42, lng = 8.27;
     let locationName = "Mellingen, CH";
 
+    // 1. Statische Berechnungen (Sonne & Mond)
     function calculateAndDisplay() {
       const now = new Date();
       const times = SunCalc.getTimes(now, lat, lng);
@@ -113,6 +118,7 @@
       document.getElementById('moonset').textContent = formatTime(moonTimes.set);
     }
 
+    // 2. Die tickende Uhr & dynamischen Daten
     function updateClock() {
       const now = new Date();
       
@@ -155,25 +161,28 @@
       const zodiacIndex = Math.floor(moonLon / 30);
       const plantDays = ["Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"];
       document.getElementById('farmerDay').textContent = plantDays[zodiacIndex];
-      }
-      }
-          }
-        });
-      }
-      for (const [elementId, planet] of Object.entries(planetMap)) {
-        try {
-          const pos = swe.calculatePosition(jd, planet);
-          const signIndex = Math.floor(pos.longitude / 30);
-          const signs = ["Widder", "Stier", "Zwillinge", "Krebs", "Löwe", "Jungfrau", "Waage", "Skorpion", "Schütze", "Steinbock", "Wassermann", "Fische"];
-          document.getElementById(elementId).textContent = signs[signIndex];
-        } catch (e) {
-          console.warn("Planet Fehler:", e);
+
+      // Planeten (Astronomy Engine)
+      if (typeof Astronomy !== 'undefined') {
+        const signs = ["Widder", "Stier", "Zwillinge", "Krebs", "Löwe", "Jungfrau", "Waage", "Skorpion", "Schütze", "Steinbock", "Wassermann", "Fische"];
+        const planetMap = {
+          'planetJupiter': Astronomy.Body.Jupiter,
+          'planetSaturn': Astronomy.Body.Saturn,
+          'planetMars': Astronomy.Body.Mars,
+          'planetVenus': Astronomy.Body.Venus
+        };
+        for (const [elementId, planet] of Object.entries(planetMap)) {
+          try {
+            const eq = Astronomy.Equator(planet, now, new Astronomy.Observer(lat, lng, 0), true, true);
+            const ecl = Astronomy.Ecliptic(eq.ra, eq.dec);
+            const signIndex = Math.floor(ecl.elon / 30);
+            document.getElementById(elementId).textContent = signs[signIndex];
+          } catch (e) {}
         }
       }
-    });
-  }
-    }
+    } // <-- HIER ENDET DIE FUNKTION. DAS IST JETZT SAUBER.
 
+    // Start
     calculateAndDisplay();
     updateClock();
     setInterval(updateClock, 1000);
