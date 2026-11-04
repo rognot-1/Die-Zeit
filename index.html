@@ -90,6 +90,21 @@
       const moonTimes = SunCalc.getMoonTimes(now, lat, lng);
       document.getElementById('moonrise').textContent = formatTime(moonTimes.rise);
       document.getElementById('moonset').textContent = formatTime(moonTimes.set);
+            // --- NEU: Lokale Sternzeit berechnen ---
+      const jd = (now.getTime() / 86400000) + 2440587.5;
+      const d = jd - 2451545.0;
+      let gmst = 280.46061837 + 360.98564736629 * d;
+      gmst = gmst % 360; 
+      if (gmst < 0) gmst += 360;
+      let lst = gmst + lng;
+      lst = lst % 360;
+      if (lst < 0) lst += 360;
+      const totalSeconds = (lst / 15) * 3600;
+      const h = Math.floor(totalSeconds / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
+      const s = Math.floor(totalSeconds % 60);
+      const formattedSidereal = `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
+      document.getElementById('siderealTime').textContent = formattedSidereal;
 
       if (times.sunrise && times.sunset) {
         const diffMs = times.sunset - times.sunrise;
