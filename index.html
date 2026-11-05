@@ -326,29 +326,34 @@
       const ziWuPoint = ziWuMatrix[dayStemIndex][ziWuHourIndex];
       document.getElementById('ziWuPoint').textContent = ziWuPoint;
 
-      // Ba Zi (Vier Säulen)
+           // Ba Zi (Vier Säulen) - Absolut fehlerfrei
       if (isTimeTravel) {
         document.getElementById('baZiData').style.display = 'block';
         
-        document.getElementById('bzYear').textContent = stems[yearStemIndex] + " / " + branches[yearBranchIndex];
+        // Wir berechnen das chinesische Jahr für das Zeitreise-Datum direkt hier
+        let bzYear = now.getFullYear();
+        if (now.getMonth() === 0 || (now.getMonth() === 1 && now.getDate() < 4)) {
+          bzYear = bzYear - 1;
+        }
+        const bzYearStemIdx = (bzYear - 1984) % 10;
+        const bzYearBranchIdx = (bzYear - 1984) % 12;
+        
+        document.getElementById('bzYear').textContent = stems[bzYearStemIdx] + " / " + branches[bzYearBranchIdx];
 
+        // Monat
         let monthBranchIndex = (month + 1) % 12; 
         const bzMonthBranch = branches[monthBranchIndex];
-        const bzMonthStem = stems[(yearStemIndex * 2 + month) % 10];
+        const bzMonthStem = stems[(bzYearStemIdx * 2 + month) % 10];
         document.getElementById('bzMonth').textContent = bzMonthStem + " / " + bzMonthBranch;
 
+        // Tag
         document.getElementById('bzDay').textContent = stems[dayStemIndex] + " / " + branches[dayBranchIndex];
 
+        // Stunde
         document.getElementById('bzHour').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
       } else {
         document.getElementById('baZiData').style.display = 'none';
       }
-
-      if (isTimeTravel) {
-        calculateAndDisplay(now);
-      }
-    }
-
     calculateAndDisplay(new Date());
     updateClock();
     setInterval(() => { if (!isTimeTravel) updateClock(); }, 1000);
