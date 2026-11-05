@@ -11,11 +11,23 @@
     .row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333; }
     .label { color: #aaa; }
     .value { font-variant-numeric: tabular-nums; }
+    .input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; justify-content: center; }
+    input[type="datetime-local"] { background: #333; color: #fff; border: 1px solid #555; padding: 0.5rem; border-radius: 5px; }
   </style>
 </head>
 <body>
   <h1>Zeitmesser</h1>
   <p id="locationDisplay" style="color: #888;">Mellingen, CH · 47.42°N, 8.27°E</p>
+
+  <!-- NEU: Das Zeitreise-Eingabefenster -->
+  <div style="background: #1f1f35; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #e91e63; text-align: center;">
+    <div style="color: #e91e63; font-weight: bold; margin-bottom: 0.5rem;">⏳ Zeitreise (Geburt / Termin)</div>
+    <div class="input-group">
+      <input type="datetime-local" id="timeTravelInput">
+      <button id="timeTravelBtn" style="background: #e91e63; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">Berechnen</button>
+    </div>
+    <button id="resetTimeBtn" style="background: #333; color: #ccc; border: 1px solid #555; padding: 0.3rem 0.8rem; border-radius: 5px; cursor: pointer; font-size: 0.8rem; margin-top: 0.5rem;">Zurück zum Jetzt</button>
+  </div>
 
   <div style="text-align: center; margin: 1.5rem 0;">
     <div id="liveClock" style="font-size: 3rem; font-weight: 300; font-variant-numeric: tabular-nums;">--:--:--</div>
@@ -76,12 +88,16 @@
   <script>
     let lat = 47.42, lng = 8.27;
     let locationName = "Mellingen, CH";
+    
+    // Standardmäßig nutzen wir die aktuelle Zeit
+    let targetDate = new Date(); 
+    let isTimeTravel = false; // Merker, ob wir in der Vergangenheit/Zukunft sind
 
-    function calculateAndDisplay() {
-      const now = new Date();
-      const times = SunCalc.getTimes(now, lat, lng);
-      const moonIllum = SunCalc.getMoonIllumination(now);
-      const moonTimes = SunCalc.getMoonTimes(now, lat, lng);
+    // Die Hauptfunktion, die alles berechnet (akzeptiert ein beliebiges Datum)
+    function calculateAndDisplay(dateObj) {
+      const times = SunCalc.getTimes(dateObj, lat, lng);
+      const moonIllum = SunCalc.getMoonIllumination(dateObj);
+      const moonTimes = SunCalc.getMoonTimes(dateObj, lat, lng);
 
       document.getElementById('locationDisplay').textContent = `${locationName} · ${lat.toFixed(2)}°N, ${lng.toFixed(2)}°E`;
 
@@ -108,27 +124,20 @@
     }
 
     function updateClock() {
-      const now = new Date();
+      // Wenn wir in der Zeit reisen, nutzen wir targetDate. Sonst das echte "Jetzt".
+      const now = isTimeTravel ? targetDate : new Date();
       
-      // Normale Zeit
       document.getElementById('liveClock').textContent = now.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Zurich' });
       document.getElementById('liveDate').textContent = now.toLocaleDateString('de-CH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Europe/Zurich' });
 
-      // --- NEU: Wahre Sonnenzeit berechnen ---
+      // Wahre Sonnenzeit
       const times = SunCalc.getTimes(now, lat, lng);
-      // Differenz zwischen wahrem Mittag (12:00) und dem tatsächlichen Sonnenhöchststand
       const solarNoon = times.solarNoon;
-      const trueNoonOffsetMs = solarNoon.getTime() - now.getTime(); // Differenz in ms
-      
-      // Wir verschieben die aktuelle Zeit so, dass der Sonnenhöchststand exakt 12:00 Uhr ist
       const trueSolarTime = new Date(now.getTime() + (12 * 60 * 60 * 1000) - (solarNoon.getHours() * 60 * 60 * 1000 + solarNoon.getMinutes() * 60 * 1000));
-      
       const trueHour = parseInt(trueSolarTime.toLocaleTimeString('de-CH', { hour: '2-digit', hour12: false }));
-      
-      // Formatierung für die Anzeige der Wahren Sonnenzeit
       document.getElementById('trueSolarTime').textContent = trueSolarTime.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich' });
 
-      // TCM (Nutzt jetzt die Wahre Sonnenzeit!)
+      // TCM (Nutzt Wahre Sonnenzeit)
       const organs = [
         { start: 23, name: "Gallenblase (GB)" }, { start: 1, name: "Leber (LE)" }, { start: 3, name: "Lunge (LU)" }, { start: 5, name: "Dickdarm (DI)" },
         { start: 7, name: "Magen (MA)" }, { start: 9, name: "Milz (MP)" }, { start: 11, name: "Herz (HE)" }, { start: 13, name: "Dünndarm (DÜ)" },
@@ -146,7 +155,7 @@
       }
       document.getElementById('tcmOrgan').textContent = currentOrgan;
 
-      // Sternzeit (bleibt bei der normalen Zeit, da kosmisch)
+      // Sternzeit
       const jd = (now.getTime() / 86400000) + 2440587.5;
       const d = jd - 2451545.0;
       let gmst = 280.46061837 + 360.98564736629 * d;
@@ -163,7 +172,7 @@
       const plantDays = ["Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"];
       document.getElementById('farmerDay').textContent = plantDays[zodiacIndex];
 
-      // Planeten (Kepler-Näherung)
+      // Planeten
       const planets = {
         'planetJupiter': { period: 11.86, offset: 0.5 },
         'planetSaturn': { period: 29.46, offset: 1.2 },
@@ -179,7 +188,7 @@
         document.getElementById(id).textContent = signs[signIndex];
       }
 
-      // Chinesische Zeit (Gan-Zhi) - Nutzt jetzt die Wahre Sonnenzeit!
+      // Chinesische Zeit (Gan-Zhi)
       const stems = ["Jia (Holz)", "Yi (Holz)", "Bing (Feuer)", "Ding (Feuer)", "Wu (Erde)", "Ji (Erde)", "Geng (Metall)", "Xin (Metall)", "Ren (Wasser)", "Gui (Wasser)"];
       const branches = ["Zi (Ratte)", "Chou (Ochse)", "Yin (Tiger)", "Mao (Hase)", "Chen (Drache)", "Si (Schlange)", "Wu (Pferd)", "Wei (Ziege)", "Shen (Affe)", "You (Hahn)", "Xu (Hund)", "Hai (Schwein)"];
       
@@ -198,12 +207,43 @@
       const shuPoints = ["Jing-Well", "Ying-Spring", "Shu-Stream", "Jing-River", "He-Sea"];
       const pointIndex = hourBranchIndex % 5;
       document.getElementById('acupoint').textContent = shuPoints[pointIndex];
+      
+      // Wenn wir in der Zeit reisen, berechnen wir auch die Sonnenzeiten für dieses Datum
+      if (isTimeTravel) {
+        calculateAndDisplay(now);
+      }
     }
 
-    calculateAndDisplay();
+    // Initialer Start
+    calculateAndDisplay(new Date());
     updateClock();
-    setInterval(updateClock, 1000);
+    
+    // Die Uhr tickt nur, wenn wir NICHT in der Zeit reisen
+    setInterval(() => {
+      if (!isTimeTravel) updateClock();
+    }, 1000);
 
+    // --- NEU: Zeitreise-Logik ---
+    document.getElementById('timeTravelBtn').addEventListener('click', () => {
+      const inputVal = document.getElementById('timeTravelInput').value;
+      if (inputVal) {
+        targetDate = new Date(inputVal);
+        isTimeTravel = true;
+        updateClock();
+      } else {
+        alert("Bitte wähle ein Datum und eine Uhrzeit.");
+      }
+    });
+
+    document.getElementById('resetTimeBtn').addEventListener('click', () => {
+      isTimeTravel = false;
+      targetDate = new Date();
+      document.getElementById('timeTravelInput').value = ""; // Eingabefeld leeren
+      calculateAndDisplay(new Date());
+      updateClock();
+    });
+
+    // GPS & Schalter
     document.getElementById('gpsBtn').addEventListener('click', () => {
       if (navigator.geolocation) {
         document.getElementById('gpsBtn').textContent = "📍 Suche Standort...";
@@ -211,7 +251,8 @@
             lat = position.coords.latitude; lng = position.coords.longitude;
             locationName = "Aktueller Standort";
             document.getElementById('gpsBtn').textContent = "📍 Standort aktualisiert!";
-            calculateAndDisplay(); updateClock();
+            calculateAndDisplay(isTimeTravel ? targetDate : new Date()); 
+            updateClock();
           }, (error) => {
             document.getElementById('gpsBtn').textContent = "📍 Standort verweigert";
           });
