@@ -12,7 +12,6 @@
     .label { color: #aaa; }
     .value { font-variant-numeric: tabular-nums; }
     
-    /* Styling für das Zeitreise-Fenster */
     .time-travel-box { background: #1f1f35; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #e91e63; text-align: center; }
     .input-group { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.8rem; }
     .input-group input { background: #333; color: #fff; border: 1px solid #555; padding: 0.6rem; border-radius: 5px; width: 100%; box-sizing: border-box; }
@@ -24,15 +23,12 @@
   <h1>Zeitmesser</h1>
   <p id="locationDisplay" style="color: #888;">Mellingen, CH · 47.42°N, 8.27°E</p>
 
-  <!-- Das neue, aufgeräumte Zeitreise-Fenster -->
   <div class="time-travel-box">
     <div style="color: #e91e63; font-weight: bold; margin-bottom: 0.8rem;">⏳ Zeitreise (Geburt / Termin)</div>
-    
     <div class="input-group">
       <input type="datetime-local" id="timeTravelInput">
       <input type="text" id="locationInput" placeholder="Ort (z.B. Baden, Schweiz)">
     </div>
-    
     <button id="timeTravelBtn" class="btn-pink">Berechnen</button>
     <button id="resetTimeBtn" class="btn-grey">Zurück zum Jetzt (Mellingen)</button>
     <div id="statusText" style="font-size: 0.8rem; color: #aaa; margin-top: 0.5rem;"></div>
@@ -88,14 +84,15 @@
     <div class="row"><span class="label">Venus</span><span class="value" id="planetVenus">–</span></div>
   </div>
 
+  <!-- ERWEITERTER CHINESISCHER KALENDER -->
   <div id="ganzhiData">
+    <div class="row"><span class="label">Chinesisches Jahr</span><span class="value" id="chineseYear" style="color: #e91e63; font-weight: bold;">–</span></div>
     <div class="row"><span class="label">Tages-Gan-Zhi</span><span class="value" id="dayGanZhi" style="color: #e91e63; font-weight: bold;">–</span></div>
     <div class="row"><span class="label">Stunden-Gan-Zhi</span><span class="value" id="hourGanZhi" style="color: #e91e63; font-weight: bold;">–</span></div>
     <div class="row"><span class="label">Geöffneter Punkt</span><span class="value" id="acupoint" style="color: #03a9f4; font-weight: bold;">–</span></div>
   </div>
 
   <script>
-    // Standard-Koordinaten (Mellingen)
     let lat = 47.42, lng = 8.27;
     let locationName = "Mellingen, CH";
     
@@ -195,25 +192,39 @@
         document.getElementById(id).textContent = signs[signIndex];
       }
 
-      // Chinesische Zeit
+      // --- CHINESISCHER KALENDER (Jahr & Tag & Stunde) ---
       const stems = ["Jia (Holz)", "Yi (Holz)", "Bing (Feuer)", "Ding (Feuer)", "Wu (Erde)", "Ji (Erde)", "Geng (Metall)", "Xin (Metall)", "Ren (Wasser)", "Gui (Wasser)"];
       const branches = ["Zi (Ratte)", "Chou (Ochse)", "Yin (Tiger)", "Mao (Hase)", "Chen (Drache)", "Si (Schlange)", "Wu (Pferd)", "Wei (Ziege)", "Shen (Affe)", "You (Hahn)", "Xu (Hund)", "Hai (Schwein)"];
       
+      // Chinesisches Jahr berechnen (Referenz: 1984 war Jia-Zi / Holz-Ratte)
+      const currentYear = now.getFullYear();
+      const yearStemIndex = (currentYear - 1984 + 0) % 10;
+      const yearBranchIndex = (currentYear - 1984 + 0) % 12;
+      document.getElementById('chineseYear').textContent = stems[yearStemIndex] + " / " + branches[yearBranchIndex];
+
+      // Tag berechnen
       const daysSince1900 = Math.floor((now.getTime() - new Date(1900, 0, 1).getTime()) / 86400000);
       const dayStemIndex = (daysSince1900 + 0) % 10;
       const dayBranchIndex = (daysSince1900 + 10) % 12;
-      
       document.getElementById('dayGanZhi').textContent = stems[dayStemIndex] + " / " + branches[dayBranchIndex];
 
+      // Stunde berechnen
       let hourBranchIndex = Math.floor((trueHour + 1) / 2) % 12;
       if (trueHour === 23) hourBranchIndex = 0;
       const hourStemBase = (dayStemIndex % 5) * 2;
       const hourStemIndex = (hourStemBase + hourBranchIndex) % 10;
       document.getElementById('hourGanZhi').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
 
-      const shuPoints = ["Jing-Well", "Ying-Spring", "Shu-Stream", "Jing-River", "He-Sea"];
+      // Akupunktur-Punkte (Deutsch)
+      const shuPointsGerman = [
+        "Jing-Well (Brunnen)", 
+        "Ying-Spring (Quelle)", 
+        "Shu-Stream (Bach)", 
+        "Jing-River (Fluss)", 
+        "He-Sea (Meer)"
+      ];
       const pointIndex = hourBranchIndex % 5;
-      document.getElementById('acupoint').textContent = shuPoints[pointIndex];
+      document.getElementById('acupoint').textContent = shuPointsGerman[pointIndex];
       
       if (isTimeTravel) {
         calculateAndDisplay(now);
@@ -224,7 +235,7 @@
     updateClock();
     setInterval(() => { if (!isTimeTravel) updateClock(); }, 1000);
 
-    // --- NEU: Zeitreise mit Ortssuche ---
+    // Zeitreise mit Ortssuche
     document.getElementById('timeTravelBtn').addEventListener('click', () => {
       const inputVal = document.getElementById('timeTravelInput').value;
       const inputLocation = document.getElementById('locationInput').value;
@@ -235,18 +246,16 @@
         return;
       }
 
-      // Wenn ein Ort eingegeben wurde, suchen wir die Koordinaten
       if (inputLocation.trim() !== "") {
         status.textContent = "Suche Ort...";
         
-        // OpenStreetMap Nominatim API abfragen
         fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(inputLocation)}`)
           .then(response => response.json())
           .then(data => {
             if (data && data.length > 0) {
               lat = parseFloat(data[0].lat);
               lng = parseFloat(data[0].lon);
-              locationName = data[0].display_name.split(',')[0]; // Nur den Ortsnamen nehmen
+              locationName = data[0].display_name.split(',')[0]; 
               status.textContent = `Ort gefunden: ${locationName}`;
               
               targetDate = new Date(inputVal);
@@ -264,7 +273,6 @@
             console.error(err);
           });
       } else {
-        // Kein Ort eingegeben -> Mellingen nutzen
         lat = 47.42;
         lng = 8.27;
         locationName = "Mellingen, CH";
