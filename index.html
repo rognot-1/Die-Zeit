@@ -84,12 +84,11 @@
     <div class="row"><span class="label">Venus</span><span class="value" id="planetVenus">–</span></div>
   </div>
 
-  <!-- ERWEITERTER CHINESISCHER KALENDER -->
   <div id="ganzhiData">
     <div class="row"><span class="label">Chinesisches Jahr</span><span class="value" id="chineseYear" style="color: #e91e63; font-weight: bold;">–</span></div>
     <div class="row"><span class="label">Tages-Gan-Zhi</span><span class="value" id="dayGanZhi" style="color: #e91e63; font-weight: bold;">–</span></div>
     <div class="row"><span class="label">Stunden-Gan-Zhi</span><span class="value" id="hourGanZhi" style="color: #e91e63; font-weight: bold;">–</span></div>
-    <div class="row"><span class="label">Geöffneter Punkt</span><span class="value" id="acupoint" style="color: #03a9f4; font-weight: bold;">–</span></div>
+    <div class="row"><span class="label">Geöffneter Punkt (Na Zi)</span><span class="value" id="acupoint" style="color: #03a9f4; font-weight: bold;">–</span></div>
   </div>
 
   <script>
@@ -192,39 +191,43 @@
         document.getElementById(id).textContent = signs[signIndex];
       }
 
-      // --- CHINESISCHER KALENDER (Jahr & Tag & Stunde) ---
+      // Chinesischer Kalender
       const stems = ["Jia (Holz)", "Yi (Holz)", "Bing (Feuer)", "Ding (Feuer)", "Wu (Erde)", "Ji (Erde)", "Geng (Metall)", "Xin (Metall)", "Ren (Wasser)", "Gui (Wasser)"];
       const branches = ["Zi (Ratte)", "Chou (Ochse)", "Yin (Tiger)", "Mao (Hase)", "Chen (Drache)", "Si (Schlange)", "Wu (Pferd)", "Wei (Ziege)", "Shen (Affe)", "You (Hahn)", "Xu (Hund)", "Hai (Schwein)"];
       
-      // Chinesisches Jahr berechnen (Referenz: 1984 war Jia-Zi / Holz-Ratte)
       const currentYear = now.getFullYear();
       const yearStemIndex = (currentYear - 1984 + 0) % 10;
       const yearBranchIndex = (currentYear - 1984 + 0) % 12;
       document.getElementById('chineseYear').textContent = stems[yearStemIndex] + " / " + branches[yearBranchIndex];
 
-      // Tag berechnen
       const daysSince1900 = Math.floor((now.getTime() - new Date(1900, 0, 1).getTime()) / 86400000);
       const dayStemIndex = (daysSince1900 + 0) % 10;
       const dayBranchIndex = (daysSince1900 + 10) % 12;
       document.getElementById('dayGanZhi').textContent = stems[dayStemIndex] + " / " + branches[dayBranchIndex];
 
-      // Stunde berechnen
       let hourBranchIndex = Math.floor((trueHour + 1) / 2) % 12;
       if (trueHour === 23) hourBranchIndex = 0;
       const hourStemBase = (dayStemIndex % 5) * 2;
       const hourStemIndex = (hourStemBase + hourBranchIndex) % 10;
       document.getElementById('hourGanZhi').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
 
-      // Akupunktur-Punkte (Deutsch)
-      const shuPointsGerman = [
-        "Jing-Well (Brunnen)", 
-        "Ying-Spring (Quelle)", 
-        "Shu-Stream (Bach)", 
-        "Jing-River (Fluss)", 
-        "He-Sea (Meer)"
+      // --- NEU: Die klassischen 5 antiken Punkte (Na Zi) ---
+      // Dies sind die 5 Shu-Punkte (Transport-Punkte) an den Gliedmaßen. 
+      // Sie werden nach der klassischen Na-Zi-Methode der aktuellen Stunde zugeordnet.
+      const shuPoints = [
+        "Jing-Well (Brunnenpunkt)", 
+        "Ying-Spring (Quellpunkt)", 
+        "Shu-Stream (Bachpunkt)", 
+        "Jing-River (Flusspunkt)", 
+        "He-Sea (Meerpunkt)"
       ];
+      
+      // Die klassische Zuordnung: 
+      // Wir nutzen den Stunden-Zweig (hourBranchIndex) modulo 5, um den Punkt im Zyklus zu bestimmen.
       const pointIndex = hourBranchIndex % 5;
-      document.getElementById('acupoint').textContent = shuPointsGerman[pointIndex];
+      
+      // Für Therapeuten zeigen wir den Fachbegriff + die deutsche Entsprechung
+      document.getElementById('acupoint').textContent = shuPoints[pointIndex];
       
       if (isTimeTravel) {
         calculateAndDisplay(now);
@@ -295,15 +298,27 @@
       updateClock();
     });
 
-    // GPS & Schalter
+    // --- NEU: Der reparierte GPS-Button ---
     document.getElementById('gpsBtn').addEventListener('click', () => {
       if (navigator.geolocation) {
         document.getElementById('gpsBtn').textContent = "📍 Suche Standort...";
         navigator.geolocation.getCurrentPosition((position) => {
-            lat = position.coords.latitude; lng = position.coords.longitude;
+            // 1. Koordinaten vom GPS holen
+            lat = position.coords.latitude; 
+            lng = position.coords.longitude;
             locationName = "Aktueller Standort";
-            document.getElementById('gpsBtn').textContent = "📍 Standort aktualisiert!";
+            
+            // 2. Zeitreise beenden (zurück zum Jetzt)
             isTimeTravel = false;
+            targetDate = new Date();
+            
+            // 3. Eingabefelder leeren
+            document.getElementById('timeTravelInput').value = "";
+            document.getElementById('locationInput').value = "";
+            document.getElementById('statusText').textContent = "GPS-Standort übernommen.";
+            
+            // 4. Alles neu berechnen
+            document.getElementById('gpsBtn').textContent = "📍 Standort aktualisiert!";
             calculateAndDisplay(new Date()); 
             updateClock();
           }, (error) => {
