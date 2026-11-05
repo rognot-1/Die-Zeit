@@ -128,11 +128,19 @@
 
     <div class="row"><span class="label">Geöffneter Punkt (Na Zi)</span><span class="value" id="acupoint" style="color: #03a9f4; font-weight: bold;">–</span></div>
 
-    <!-- NEU: Zi Wu Liu Zhu (Na Zi Methode) -->
     <div class="row" style="background: #1a3a3a; padding-left: 0.5rem; padding-right: 0.5rem; margin-top: 0.5rem; border-left: 3px solid #00bcd4;">
       <span class="label" style="color: #00bcd4;">Zi Wu Liu Zhu (Na Zi)</span>
       <span class="value" id="ziWuPoint" style="color: #00e5ff; font-weight: bold;">–</span>
     </div>
+  </div>
+
+  <!-- NEU: Ba Zi (Vier Säulen des Schicksals) -->
+  <div id="baZiData" style="background: #1f1f35; padding: 1rem; border-radius: 8px; margin-top: 1rem; border: 1px solid #ff9800; display: none;">
+    <div style="color: #ff9800; font-weight: bold; margin-bottom: 0.5rem; text-align: center;">Ba Zi (Vier Säulen des Schicksals)</div>
+    <div class="row"><span class="label">Säule des Jahres</span><span class="value" id="bzYear" style="color: #ff9800;">–</span></div>
+    <div class="row"><span class="label">Säule des Monats</span><span class="value" id="bzMonth" style="color: #ff9800;">–</span></div>
+    <div class="row"><span class="label">Säule des Tages</span><span class="value" id="bzDay" style="color: #ff9800;">–</span></div>
+    <div class="row"><span class="label">Säule der Stunde</span><span class="value" id="bzHour" style="color: #ff9800;">–</span></div>
   </div>
 
   <script>
@@ -295,42 +303,53 @@
       const pointIndex = hourBranchIndex % 5;
       document.getElementById('acupoint').textContent = shuPoints[pointIndex];
 
-      // --- NEU: Zi Wu Liu Zhu (Na Zi Methode) ---
-      // Die Matrix basiert auf dem Tages-Himmelsstamm (0-9) und dem Stunden-Zweig (0-11).
-      // Da die Tabelle sehr groß ist, nutzen wir eine klassische, vereinfachte 10x5-Matrix,
-      // die den 5 antiken Punkten die exakten Meridianpunkte zuweist.
-      // Format: [Meridian + Punkt] für jede Stunde im 10-Tage-Zyklus.
-      
+      // Zi Wu Liu Zhu (Na Zi Methode)
       const ziWuMatrix = [
-        // Tag Jia (0) - Lunge
         ["Lu 11 (Shaoshang)", "Lu 10 (Yuji)", "Lu 9 (Taiyuan)", "Lu 8 (Jingqu)", "Lu 5 (Chize)"],
-        // Tag Yi (1) - Dickdarm
         ["Di 1 (Shangyang)", "Di 2 (Erjian)", "Di 3 (Sanjian)", "Di 5 (Yangxi)", "Di 11 (Quchi)"],
-        // Tag Bing (2) - Magen
         ["Ma 45 (Lidui)", "Ma 44 (Neiting)", "Ma 43 (Xiangu)", "Ma 41 (Jiexi)", "Ma 36 (Zusanli)"],
-        // Tag Ding (3) - Milz
         ["Mi 1 (Yinbai)", "Mi 2 (Taibai)", "Mi 3 (Taibai)", "Mi 5 (Shangqiu)", "Mi 9 (Yinlingquan)"],
-        // Tag Wu (4) - Herz
         ["He 9 (Shaochong)", "He 8 (Shaofu)", "He 7 (Shenmen)", "He 4 (Lingdao)", "He 3 (Shaohai)"],
-        // Tag Ji (5) - Dünndarm
         ["Dü 1 (Shaoze)", "Dü 2 (Qiangu)", "Dü 3 (Houxi)", "Dü 5 (Yanggu)", "Dü 8 (Xiaohai)"],
-        // Tag Geng (6) - Blase
         ["Bl 67 (Zhiyin)", "Bl 66 (Zutonggu)", "Bl 65 (Shugu)", "Bl 60 (Kunlun)", "Bl 40 (Weizhong)"],
-        // Tag Xin (7) - Niere
         ["Ni 1 (Yongquan)", "Ni 2 (Rangu)", "Ni 3 (Taixi)", "Ni 7 (Fuliu)", "Ni 10 (Yingu)"],
-        // Tag Ren (8) - Perikard
         ["Pe 9 (Zhongchong)", "Pe 8 (Laogong)", "Pe 7 (Daling)", "Pe 5 (Jianshi)", "Pe 3 (Quze)"],
-        // Tag Gui (9) - Sanjiao
         ["3E 1 (Guanchong)", "3E 2 (Yemen)", "3E 3 (Zhongzhu)", "3E 6 (Zhigou)", "3E 10 (Tianjing)"]
       ];
-
-      // Wir holen uns den Index für die aktuelle Stunde (0-4) und den Tag (0-9)
-      // Da die Stunden von 0 bis 11 gehen, müssen wir sie auf die 5 antiken Punkte abbilden.
-      // Klassische Na Zi Regel: Die Punkte wechseln im 5er-Rhythmus (Yin/Yang Meridiane).
       const ziWuHourIndex = hourBranchIndex % 5; 
       const ziWuPoint = ziWuMatrix[dayStemIndex][ziWuHourIndex];
-      
       document.getElementById('ziWuPoint').textContent = ziWuPoint;
+
+      // --- NEU: Ba Zi (Vier Säulen des Schicksals) ---
+      // Wir zeigen die Ba Zi nur an, wenn wir uns im Zeitreise-Modus befinden!
+      if (isTimeTravel) {
+        document.getElementById('baZiData').style.display = 'block';
+        
+        // 1. Jahr (basierend auf dem chinesischen Neujahr - hier stark vereinfacht auf den gregorianischen Jahreswechsel)
+        // Hinweis: Für eine exakte Berechnung müsste das chinesische Neujahr (Ende Jan / Feb) berücksichtigt werden.
+        const bzYearText = stems[yearStemIndex] + " / " + branches[yearBranchIndex];
+        document.getElementById('bzYear').textContent = bzYearText;
+
+        // 2. Monat
+        // Die chinesischen Monate beginnen mit den Solar Terms (ca. 4.-7. des Monats).
+        // Der Monats-Zweig (Branch) ist fest: Tiger (Yin) beginnt im Februar.
+        // Für die Monats-Berechnung verschieben wir den Monat um 1, da der Zyklus bei Yin (Tiger) beginnt.
+        let monthBranchIndex = (month + 1) % 12; // Februar = 2 -> Yin (Tiger, Index 2)
+        const bzMonthBranch = branches[monthBranchIndex];
+        // Der Monats-Stamm hängt vom Jahres-Stamm ab (komplizierte Formel, hier genähert)
+        const bzMonthStem = stems[(yearStemIndex * 2 + month) % 10];
+        document.getElementById('bzMonth').textContent = bzMonthStem + " / " + bzMonthBranch;
+
+        // 3. Tag
+        const bzDayText = stems[dayStemIndex] + " / " + branches[dayBranchIndex];
+        document.getElementById('bzDay').textContent = bzDayText;
+
+        // 4. Stunde
+        const bzHourText = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
+        document.getElementById('bzHour').textContent = bzHourText;
+      } else {
+        document.getElementById('baZiData').style.display = 'none';
+      }
 
       if (isTimeTravel) {
         calculateAndDisplay(now);
