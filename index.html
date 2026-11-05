@@ -59,7 +59,6 @@
     <div style="color: #aaa; font-size: 0.8rem; margin-top: 0.5rem;">Wahre Sonnenzeit: <span id="trueSolarTime" style="color: #ffaa00;">–</span></div>
   </div>
 
-  <!-- NEU: Wu Xing (Fünf Wandlungsphasen) -->
   <div id="wuXingData">
     <div class="row"><span class="label">Aktives Element (Stunde)</span><span class="value" id="currentElement" style="color: #ff9800; font-weight: bold;">–</span></div>
     <div class="row"><span class="label">Jahreszeit (TCM)</span><span class="value" id="tcmSeason" style="color: #ff9800; font-weight: bold;">–</span></div>
@@ -96,6 +95,13 @@
     <div class="row"><span class="label">Chinesisches Jahr</span><span class="value" id="chineseYear" style="color: #e91e63; font-weight: bold;">–</span></div>
     <div class="row"><span class="label">Tages-Gan-Zhi</span><span class="value" id="dayGanZhi" style="color: #e91e63; font-weight: bold;">–</span></div>
     <div class="row"><span class="label">Stunden-Gan-Zhi</span><span class="value" id="hourGanZhi" style="color: #e91e63; font-weight: bold;">–</span></div>
+    
+    <!-- NEU: Der Punkt des Tages -->
+    <div class="row" style="background: #2a1a2a; padding-left: 0.5rem; padding-right: 0.5rem; margin-top: 0.5rem; border-left: 3px solid #e91e63;">
+      <span class="label" style="color: #e91e63;">Punkt des Tages (Stamm)</span>
+      <span class="value" id="dailyPoint" style="color: #03a9f4; font-weight: bold;">–</span>
+    </div>
+
     <div class="row"><span class="label">Geöffneter Punkt (Na Zi)</span><span class="value" id="acupoint" style="color: #03a9f4; font-weight: bold;">–</span></div>
   </div>
 
@@ -168,34 +174,20 @@
         } else {
           if (trueHour >= current.start || trueHour < next.start) isMatch = true;
         }
-        if (isMatch) { 
-          currentOrgan = current.name; 
-          currentElement = current.element; 
-          break; 
-        }
+        if (isMatch) { currentOrgan = current.name; currentElement = current.element; break; }
       }
       document.getElementById('tcmOrgan').textContent = currentOrgan;
       document.getElementById('currentElement').textContent = currentElement;
 
-      // --- NEU: Jahreszeit nach TCM (Wu Xing) ---
-      // Die TCM-Jahreszeiten richten sich nach den Solstitien und Äquinoktien.
-      // Frühling (Holz): Frühlingsäquinoktium bis Sommersonnenwende (ca. 20. März - 21. Juni)
-      // Sommer (Feuer): Sommersonnenwende bis Herbstäquinoktium (ca. 21. Juni - 22. September)
-      // Herbst (Metall): Herbstäquinoktium bis Wintersonnenwende (ca. 22. September - 21. Dezember)
-      // Winter (Wasser): Wintersonnenwende bis Frühlingsäquinoktium (ca. 21. Dezember - 20. März)
-      // Spätsommer (Erde): Die Übergangszeiten (ca. die letzten 18 Tage jeder Jahreszeit, hier vereinfacht: Ende August bis Anfang September)
-      const month = now.getMonth() + 1; // 1-12
+      // Jahreszeit nach TCM
+      const month = now.getMonth() + 1;
       const day = now.getDate();
       let season = "Unbekannt";
-      
       if ((month === 3 && day >= 20) || month === 4 || month === 5 || (month === 6 && day < 21)) season = "Frühling (Holz)";
       else if ((month === 6 && day >= 21) || month === 7 || month === 8 || (month === 9 && day < 22)) season = "Sommer (Feuer)";
       else if ((month === 9 && day >= 22) || month === 10 || month === 11 || (month === 12 && day < 21)) season = "Herbst (Metall)";
       else season = "Winter (Wasser)";
-      
-      // Spätsommer (Erde) als Übergangszeit (vereinfacht für die 18 Tage vor den Äquinoktien)
-      if ((month === 8 && day >= 23) || (month === 9 && day < 10)) season = "Spätsommer (Erde)"; // Vereinfachte Übergangszeit
-
+      if ((month === 8 && day >= 23) || (month === 9 && day < 10)) season = "Spätsommer (Erde)"; 
       document.getElementById('tcmSeason').textContent = season;
 
       // Sternzeit
@@ -240,7 +232,6 @@
       const yearBranchIndex = (currentYear - 1984 + 0) % 12;
       document.getElementById('chineseYear').textContent = stems[yearStemIndex] + " / " + branches[yearBranchIndex];
       
-      // Jahres-Element (Himmelsstamm)
       let yearElement = "Unbekannt";
       if (yearStemIndex < 2) yearElement = "Holz";
       else if (yearStemIndex < 4) yearElement = "Feuer";
@@ -260,7 +251,24 @@
       const hourStemIndex = (hourStemBase + hourBranchIndex) % 10;
       document.getElementById('hourGanZhi').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
 
-      // Akupunktur-Punkte
+      // --- NEU: Punkt des Tages (Tages-Stamm Methode) ---
+      // Klassische Zuordnung der 5 antiken Punkte zu den 10 Himmelsstämmen.
+      // (Dies ist eine verbreitete klassische Zuordnung, die Tabelle kann je nach Schule variieren).
+      const dailyPoints = [
+        "Jing-Well (Brunnen)",  // Jia
+        "Ying-Spring (Quelle)", // Yi
+        "Shu-Stream (Bach)",    // Bing
+        "Jing-River (Fluss)",   // Ding
+        "He-Sea (Meer)",        // Wu
+        "Jing-Well (Brunnen)",  // Ji
+        "Ying-Spring (Quelle)", // Geng
+        "Shu-Stream (Bach)",    // Xin
+        "Jing-River (Fluss)",   // Ren
+        "He-Sea (Meer)"         // Gui
+      ];
+      document.getElementById('dailyPoint').textContent = dailyPoints[dayStemIndex];
+
+      // Akupunktur-Punkte (Stunde)
       const shuPoints = [
         "Jing-Well (Brunnenpunkt)", 
         "Ying-Spring (Quellpunkt)", 
@@ -293,7 +301,6 @@
 
       if (inputLocation.trim() !== "") {
         status.textContent = "Suche Ort...";
-        
         fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(inputLocation)}`)
           .then(response => response.json())
           .then(data => {
@@ -302,7 +309,6 @@
               lng = parseFloat(data[0].lon);
               locationName = data[0].display_name.split(',')[0]; 
               status.textContent = `Ort gefunden: ${locationName}`;
-              
               targetDate = new Date(inputVal);
               isTimeTravel = true;
               updateClock();
@@ -318,9 +324,7 @@
             console.error(err);
           });
       } else {
-        lat = 47.42;
-        lng = 8.27;
-        locationName = "Mellingen, CH";
+        lat = 47.42; lng = 8.27; locationName = "Mellingen, CH";
         targetDate = new Date(inputVal);
         isTimeTravel = true;
         updateClock();
@@ -328,16 +332,10 @@
     });
 
     document.getElementById('resetTimeBtn').addEventListener('click', () => {
-      isTimeTravel = false;
-      targetDate = new Date();
-      lat = 47.42;
-      lng = 8.27;
-      locationName = "Mellingen, CH";
-      document.getElementById('timeTravelInput').value = "";
-      document.getElementById('locationInput').value = "";
+      isTimeTravel = false; targetDate = new Date(); lat = 47.42; lng = 8.27; locationName = "Mellingen, CH";
+      document.getElementById('timeTravelInput').value = ""; document.getElementById('locationInput').value = "";
       document.getElementById('statusText').textContent = "";
-      calculateAndDisplay(new Date());
-      updateClock();
+      calculateAndDisplay(new Date()); updateClock();
     });
 
     // GPS
@@ -345,17 +343,12 @@
       if (navigator.geolocation) {
         document.getElementById('gpsBtn').textContent = "📍 Suche Standort...";
         navigator.geolocation.getCurrentPosition((position) => {
-            lat = position.coords.latitude; 
-            lng = position.coords.longitude;
-            locationName = "Aktueller Standort";
-            isTimeTravel = false;
-            targetDate = new Date();
-            document.getElementById('timeTravelInput').value = "";
-            document.getElementById('locationInput').value = "";
+            lat = position.coords.latitude; lng = position.coords.longitude; locationName = "Aktueller Standort";
+            isTimeTravel = false; targetDate = new Date();
+            document.getElementById('timeTravelInput').value = ""; document.getElementById('locationInput').value = "";
             document.getElementById('statusText').textContent = "GPS-Standort übernommen.";
             document.getElementById('gpsBtn').textContent = "📍 Standort aktualisiert!";
-            calculateAndDisplay(new Date()); 
-            updateClock();
+            calculateAndDisplay(new Date()); updateClock();
           }, (error) => {
             document.getElementById('gpsBtn').textContent = "📍 Standort verweigert";
           });
