@@ -260,7 +260,7 @@
         document.getElementById(id).textContent = signs[signIndex];
       }
 
-      // Chinesischer Kalender & Ba Zi (Alles an einem Ort, keine Variablenkonflikte)
+      // Chinesischer Kalender & Ba Zi
       const stems = ["Jia (Holz)", "Yi (Holz)", "Bing (Feuer)", "Ding (Feuer)", "Wu (Erde)", "Ji (Erde)", "Geng (Metall)", "Xin (Metall)", "Ren (Wasser)", "Gui (Wasser)"];
       const branches = ["Zi (Ratte)", "Chou (Ochse)", "Yin (Tiger)", "Mao (Hase)", "Chen (Drache)", "Si (Schlange)", "Wu (Pferd)", "Wei (Ziege)", "Shen (Affe)", "You (Hahn)", "Xu (Hund)", "Hai (Schwein)"];
       
@@ -272,8 +272,14 @@
       if (currentMonth === 1 || (currentMonth === 2 && currentDay < 4)) {
         chineseYear = currentYear - 1;
       }
-      const yearStemIndex = (chineseYear - 1984 + 0) % 10;
-      const yearBranchIndex = (chineseYear - 1984 + 0) % 12;
+      
+      // SICHERHEITSABFRAGE FÜR DAS JAHR
+      let yearStemIndex = (chineseYear - 1984) % 10;
+      if (yearStemIndex < 0) yearStemIndex += 10;
+      
+      let yearBranchIndex = (chineseYear - 1984) % 12;
+      if (yearBranchIndex < 0) yearBranchIndex += 12;
+
       document.getElementById('chineseYear').textContent = stems[yearStemIndex] + " / " + branches[yearBranchIndex];
       
       let yearElement = "Unbekannt";
@@ -332,8 +338,14 @@
         
         let bzYear = now.getFullYear();
         if (now.getMonth() === 0 || (now.getMonth() === 1 && now.getDate() < 4)) bzYear = bzYear - 1;
-        const bzYearStemIdx = (bzYear - 1984) % 10;
-        const bzYearBranchIdx = (bzYear - 1984) % 12;
+        
+        // SICHERHEITSABFRAGE FÜR DIE BA ZI SÄULE
+        let bzYearStemIdx = (bzYear - 1984) % 10;
+        if (bzYearStemIdx < 0) bzYearStemIdx += 10;
+        
+        let bzYearBranchIdx = (bzYear - 1984) % 12;
+        if (bzYearBranchIdx < 0) bzYearBranchIdx += 12;
+        
         document.getElementById('bzYear').textContent = stems[bzYearStemIdx] + " / " + branches[bzYearBranchIdx];
 
         let monthBranchIndex = (month + 1) % 12; 
