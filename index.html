@@ -184,14 +184,53 @@
       document.getElementById('liveClock').textContent = now.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Zurich' });
       document.getElementById('liveDate').textContent = now.toLocaleDateString('de-CH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Europe/Zurich' });
 
-      // Wahre Sonnenzeit
+      // 1. Wahre Sonnenzeit berechnen
       const times = SunCalc.getTimes(now, lat, lng);
       const solarNoon = times.solarNoon;
       const trueSolarTime = new Date(now.getTime() + (12 * 60 * 60 * 1000) - (solarNoon.getHours() * 60 * 60 * 1000 + solarNoon.getMinutes() * 60 * 1000));
       const trueHour = parseInt(trueSolarTime.toLocaleTimeString('de-CH', { hour: '2-digit', hour12: false }));
       document.getElementById('trueSolarTime').textContent = trueSolarTime.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich' });
 
-      // TCM Organuhr
+      // 2. Alle Variablen für den chinesischen Kalender (ein für alle Mal hier oben)
+      const stems = ["Jia (Holz)", "Yi (Holz)", "Bing (Feuer)", "Ding (Feuer)", "Wu (Erde)", "Ji (Erde)", "Geng (Metall)", "Xin (Metall)", "Ren (Wasser)", "Gui (Wasser)"];
+      const branches = ["Zi (Ratte)", "Chou (Ochse)", "Yin (Tiger)", "Mao (Hase)", "Chen (Drache)", "Si (Schlange)", "Wu (Pferd)", "Wei (Ziege)", "Shen (Affe)", "You (Hahn)", "Xu (Hund)", "Hai (Schwein)"];
+      const signs = ["Widder", "Stier", "Zwillinge", "Krebs", "Löwe", "Jungfrau", "Waage", "Skorpion", "Schütze", "Steinbock", "Wassermann", "Fische"];
+      
+      const currentYear = now.getFullYear();
+      const currentMonth = now.getMonth() + 1; // 1-12
+      const currentDay = now.getDate();
+
+      // 3. Chinesisches Jahr (mit Neujahrs-Logik)
+      let chineseYear = currentYear;
+      if (currentMonth === 1 || (currentMonth === 2 && currentDay < 4)) {
+        chineseYear = currentYear - 1;
+      }
+      const yearStemIndex = (chineseYear - 1984 + 0) % 10;
+      const yearBranchIndex = (chineseYear - 1984 + 0) % 12;
+      document.getElementById('chineseYear').textContent = stems[yearStemIndex] + " / " + branches[yearBranchIndex];
+      
+      let yearElement = "Unbekannt";
+      if (yearStemIndex < 2) yearElement = "Holz";
+      else if (yearStemIndex < 4) yearElement = "Feuer";
+      else if (yearStemIndex < 6) yearElement = "Erde";
+      else if (yearStemIndex < 8) yearElement = "Metall";
+      else yearElement = "Wasser";
+      document.getElementById('yearElement').textContent = yearElement + "-Jahr";
+
+      // 4. Tag
+      const daysSince1900 = Math.floor((now.getTime() - new Date(1900, 0, 1).getTime()) / 86400000);
+      const dayStemIndex = (daysSince1900 + 0) % 10;
+      const dayBranchIndex = (daysSince1900 + 10) % 12;
+      document.getElementById('dayGanZhi').textContent = stems[dayStemIndex] + " / " + branches[dayBranchIndex];
+
+      // 5. Stunde
+      let hourBranchIndex = Math.floor((trueHour + 1) / 2) % 12;
+      if (trueHour === 23) hourBranchIndex = 0;
+      const hourStemBase = (dayStemIndex % 5) * 2;
+      const hourStemIndex = (hourStemBase + hourBranchIndex) % 10;
+      document.getElementById('hourGanZhi').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
+
+      // 6. TCM Organuhr
       const organs = [
         { start: 23, name: "Gallenblase (GB)", element: "Holz" }, { start: 1, name: "Leber (LE)", element: "Holz" }, 
         { start: 3, name: "Lunge (LU)", element: "Metall" }, { start: 5, name: "Dickdarm (DI)", element: "Metall" },
@@ -216,9 +255,9 @@
       document.getElementById('tcmOrgan').textContent = currentOrgan;
       document.getElementById('currentElement').textContent = currentElement;
 
-      // Jahreszeit nach TCM
-      const month = now.getMonth() + 1;
-      const day = now.getDate();
+      // 7. Jahreszeit nach TCM
+      const month = currentMonth;
+      const day = currentDay;
       let season = "Unbekannt";
       if ((month === 3 && day >= 20) || month === 4 || month === 5 || (month === 6 && day < 21)) season = "Frühling (Holz)";
       else if ((month === 6 && day >= 21) || month === 7 || month === 8 || (month === 9 && day < 22)) season = "Sommer (Feuer)";
@@ -227,7 +266,7 @@
       if ((month === 8 && day >= 23) || (month === 9 && day < 10)) season = "Spätsommer (Erde)"; 
       document.getElementById('tcmSeason').textContent = season;
 
-      // Sternzeit
+      // 8. Sternzeit
       const jd = (now.getTime() / 86400000) + 2440587.5;
       const d = jd - 2451545.0;
       let gmst = 280.46061837 + 360.98564736629 * d;
@@ -237,21 +276,20 @@
       const h = Math.floor(totalSeconds / 3600); const m = Math.floor((totalSeconds % 3600) / 60); const s = Math.floor(totalSeconds % 60);
       document.getElementById('siderealTime').textContent = `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
 
-      // Bauernkalender
+      // 9. Bauernkalender
       let moonLon = 218.32 + 13.176396 * d + 6.29 * Math.sin((134.9 + 13.064993 * d) * Math.PI / 180);
       moonLon = moonLon % 360; if (moonLon < 0) moonLon += 360;
       const zodiacIndex = Math.floor(moonLon / 30);
       const plantDays = ["Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"];
       document.getElementById('farmerDay').textContent = plantDays[zodiacIndex];
 
-      // Planeten
+      // 10. Planeten
       const planets = {
         'planetJupiter': { period: 11.86, offset: 0.5 },
         'planetSaturn': { period: 29.46, offset: 1.2 },
         'planetMars': { period: 1.88, offset: 3.4 },
         'planetVenus': { period: 0.62, offset: 2.1 }
       };
-      const signs = ["Widder", "Stier", "Zwillinge", "Krebs", "Löwe", "Jungfrau", "Waage", "Skorpion", "Schütze", "Steinbock", "Wassermann", "Fische"];
       const yearsSince2000 = d / 365.25;
       for (const [id, data] of Object.entries(planets)) {
         let angle = ((yearsSince2000 / data.period) * 360 + (data.offset * 30)) % 360;
@@ -260,56 +298,21 @@
         document.getElementById(id).textContent = signs[signIndex];
       }
 
-      // --- 1. Alle Variablen ZUERST berechnen ---
-      const stems = ["Jia (Holz)", "Yi (Holz)", "Bing (Feuer)", "Ding (Feuer)", "Wu (Erde)", "Ji (Erde)", "Geng (Metall)", "Xin (Metall)", "Ren (Wasser)", "Gui (Wasser)"];
-      const branches = ["Zi (Ratte)", "Chou (Ochse)", "Yin (Tiger)", "Mao (Hase)", "Chen (Drache)", "Si (Schlange)", "Wu (Pferd)", "Wei (Ziege)", "Shen (Affe)", "You (Hahn)", "Xu (Hund)", "Hai (Schwein)"];
-      
-      const currentYear = now.getFullYear();
-      
-      // Chinesisches Neujahr (stark vereinfacht: Wenn vor dem 4. Februar, zählt das Vorjahr)
-      let chineseYear = currentYear;
-      if (now.getMonth() === 0 || (now.getMonth() === 1 && day < 4)) {
-        chineseYear = currentYear - 1;
-      }
-
-      const yearStemIndex = (chineseYear - 1984 + 0) % 10;
-      const yearBranchIndex = (chineseYear - 1984 + 0) % 12;
-      document.getElementById('chineseYear').textContent = stems[yearStemIndex] + " / " + branches[yearBranchIndex];
-      
-      let yearElement = "Unbekannt";
-      if (yearStemIndex < 2) yearElement = "Holz";
-      else if (yearStemIndex < 4) yearElement = "Feuer";
-      else if (yearStemIndex < 6) yearElement = "Erde";
-      else if (yearStemIndex < 8) yearElement = "Metall";
-      else yearElement = "Wasser";
-      document.getElementById('yearElement').textContent = yearElement + "-Jahr";
-
-      const daysSince1900 = Math.floor((now.getTime() - new Date(1900, 0, 1).getTime()) / 86400000);
-      const dayStemIndex = (daysSince1900 + 0) % 10;
-      const dayBranchIndex = (daysSince1900 + 10) % 12;
-      document.getElementById('dayGanZhi').textContent = stems[dayStemIndex] + " / " + branches[dayBranchIndex];
-
-      let hourBranchIndex = Math.floor((trueHour + 1) / 2) % 12;
-      if (trueHour === 23) hourBranchIndex = 0;
-      const hourStemBase = (dayStemIndex % 5) * 2;
-      const hourStemIndex = (hourStemBase + hourBranchIndex) % 10;
-      document.getElementById('hourGanZhi').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
-
-      // Punkt des Tages
+      // 11. Punkt des Tages
       const dailyPoints = [
         "Jing-Well (Brunnen)", "Ying-Spring (Quelle)", "Shu-Stream (Bach)", "Jing-River (Fluss)", "He-Sea (Meer)",
         "Jing-Well (Brunnen)", "Ying-Spring (Quelle)", "Shu-Stream (Bach)", "Jing-River (Fluss)", "He-Sea (Meer)"
       ];
       document.getElementById('dailyPoint').textContent = dailyPoints[dayStemIndex];
 
-      // Akupunktur-Punkte
+      // 12. Akupunktur-Punkte
       const shuPoints = [
         "Jing-Well (Brunnenpunkt)", "Ying-Spring (Quellpunkt)", "Shu-Stream (Bachpunkt)", "Jing-River (Flusspunkt)", "He-Sea (Meerpunkt)"
       ];
       const pointIndex = hourBranchIndex % 5;
       document.getElementById('acupoint').textContent = shuPoints[pointIndex];
 
-      // Zi Wu Liu Zhu
+      // 13. Zi Wu Liu Zhu
       const ziWuMatrix = [
         ["Lu 11 (Shaoshang)", "Lu 10 (Yuji)", "Lu 9 (Taiyuan)", "Lu 8 (Jingqu)", "Lu 5 (Chize)"],
         ["Di 1 (Shangyang)", "Di 2 (Erjian)", "Di 3 (Sanjian)", "Di 5 (Yangxi)", "Di 11 (Quchi)"],
@@ -326,26 +329,21 @@
       const ziWuPoint = ziWuMatrix[dayStemIndex][ziWuHourIndex];
       document.getElementById('ziWuPoint').textContent = ziWuPoint;
 
-      // --- 2. Ba Zi (Vier Säulen des Schicksals) ---
+      // 14. Ba Zi (Vier Säulen) - Jetzt mit allen Variablen!
       if (isTimeTravel) {
         document.getElementById('baZiData').style.display = 'block';
-        alert("Ba Zi startet! Jahr: " + yearStemIndex + " " + yearBranchIndex);
         
-        // Jahr
         const bzYearText = stems[yearStemIndex] + " / " + branches[yearBranchIndex];
         document.getElementById('bzYear').textContent = bzYearText;
 
-        // Monat
         let monthBranchIndex = (month + 1) % 12; 
         const bzMonthBranch = branches[monthBranchIndex];
         const bzMonthStem = stems[(yearStemIndex * 2 + month) % 10];
         document.getElementById('bzMonth').textContent = bzMonthStem + " / " + bzMonthBranch;
 
-        // Tag
         const bzDayText = stems[dayStemIndex] + " / " + branches[dayBranchIndex];
         document.getElementById('bzDay').textContent = bzDayText;
 
-        // Stunde
         const bzHourText = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
         document.getElementById('bzHour').textContent = bzHourText;
       } else {
