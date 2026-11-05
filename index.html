@@ -134,7 +134,6 @@
     </div>
   </div>
 
-  <!-- NEU: Ba Zi (Vier Säulen des Schicksals) -->
   <div id="baZiData" style="background: #1f1f35; padding: 1rem; border-radius: 8px; margin-top: 1rem; border: 1px solid #ff9800; display: none;">
     <div style="color: #ff9800; font-weight: bold; margin-bottom: 0.5rem; text-align: center;">Ba Zi (Vier Säulen des Schicksals)</div>
     <div class="row"><span class="label">Säule des Jahres</span><span class="value" id="bzYear" style="color: #ff9800;">–</span></div>
@@ -261,13 +260,20 @@
         document.getElementById(id).textContent = signs[signIndex];
       }
 
-      // Chinesischer Kalender
+      // --- 1. Alle Variablen ZUERST berechnen ---
       const stems = ["Jia (Holz)", "Yi (Holz)", "Bing (Feuer)", "Ding (Feuer)", "Wu (Erde)", "Ji (Erde)", "Geng (Metall)", "Xin (Metall)", "Ren (Wasser)", "Gui (Wasser)"];
       const branches = ["Zi (Ratte)", "Chou (Ochse)", "Yin (Tiger)", "Mao (Hase)", "Chen (Drache)", "Si (Schlange)", "Wu (Pferd)", "Wei (Ziege)", "Shen (Affe)", "You (Hahn)", "Xu (Hund)", "Hai (Schwein)"];
       
       const currentYear = now.getFullYear();
-      const yearStemIndex = (currentYear - 1984 + 0) % 10;
-      const yearBranchIndex = (currentYear - 1984 + 0) % 12;
+      
+      // Chinesisches Neujahr (stark vereinfacht: Wenn vor dem 4. Februar, zählt das Vorjahr)
+      let chineseYear = currentYear;
+      if (now.getMonth() === 0 || (now.getMonth() === 1 && day < 4)) {
+        chineseYear = currentYear - 1;
+      }
+
+      const yearStemIndex = (chineseYear - 1984 + 0) % 10;
+      const yearBranchIndex = (chineseYear - 1984 + 0) % 12;
       document.getElementById('chineseYear').textContent = stems[yearStemIndex] + " / " + branches[yearBranchIndex];
       
       let yearElement = "Unbekannt";
@@ -289,21 +295,21 @@
       const hourStemIndex = (hourStemBase + hourBranchIndex) % 10;
       document.getElementById('hourGanZhi').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
 
-      // Punkt des Tages (Tages-Stamm Methode)
+      // Punkt des Tages
       const dailyPoints = [
         "Jing-Well (Brunnen)", "Ying-Spring (Quelle)", "Shu-Stream (Bach)", "Jing-River (Fluss)", "He-Sea (Meer)",
         "Jing-Well (Brunnen)", "Ying-Spring (Quelle)", "Shu-Stream (Bach)", "Jing-River (Fluss)", "He-Sea (Meer)"
       ];
       document.getElementById('dailyPoint').textContent = dailyPoints[dayStemIndex];
 
-      // Akupunktur-Punkte (Stunde)
+      // Akupunktur-Punkte
       const shuPoints = [
         "Jing-Well (Brunnenpunkt)", "Ying-Spring (Quellpunkt)", "Shu-Stream (Bachpunkt)", "Jing-River (Flusspunkt)", "He-Sea (Meerpunkt)"
       ];
       const pointIndex = hourBranchIndex % 5;
       document.getElementById('acupoint').textContent = shuPoints[pointIndex];
 
-      // Zi Wu Liu Zhu (Na Zi Methode)
+      // Zi Wu Liu Zhu
       const ziWuMatrix = [
         ["Lu 11 (Shaoshang)", "Lu 10 (Yuji)", "Lu 9 (Taiyuan)", "Lu 8 (Jingqu)", "Lu 5 (Chize)"],
         ["Di 1 (Shangyang)", "Di 2 (Erjian)", "Di 3 (Sanjian)", "Di 5 (Yangxi)", "Di 11 (Quchi)"],
@@ -320,31 +326,25 @@
       const ziWuPoint = ziWuMatrix[dayStemIndex][ziWuHourIndex];
       document.getElementById('ziWuPoint').textContent = ziWuPoint;
 
-      // --- NEU: Ba Zi (Vier Säulen des Schicksals) ---
-      // Wir zeigen die Ba Zi nur an, wenn wir uns im Zeitreise-Modus befinden!
+      // --- 2. Ba Zi (Vier Säulen des Schicksals) ---
       if (isTimeTravel) {
         document.getElementById('baZiData').style.display = 'block';
         
-        // 1. Jahr (basierend auf dem chinesischen Neujahr - hier stark vereinfacht auf den gregorianischen Jahreswechsel)
-        // Hinweis: Für eine exakte Berechnung müsste das chinesische Neujahr (Ende Jan / Feb) berücksichtigt werden.
+        // Jahr
         const bzYearText = stems[yearStemIndex] + " / " + branches[yearBranchIndex];
         document.getElementById('bzYear').textContent = bzYearText;
 
-        // 2. Monat
-        // Die chinesischen Monate beginnen mit den Solar Terms (ca. 4.-7. des Monats).
-        // Der Monats-Zweig (Branch) ist fest: Tiger (Yin) beginnt im Februar.
-        // Für die Monats-Berechnung verschieben wir den Monat um 1, da der Zyklus bei Yin (Tiger) beginnt.
-        let monthBranchIndex = (month + 1) % 12; // Februar = 2 -> Yin (Tiger, Index 2)
+        // Monat
+        let monthBranchIndex = (month + 1) % 12; 
         const bzMonthBranch = branches[monthBranchIndex];
-        // Der Monats-Stamm hängt vom Jahres-Stamm ab (komplizierte Formel, hier genähert)
         const bzMonthStem = stems[(yearStemIndex * 2 + month) % 10];
         document.getElementById('bzMonth').textContent = bzMonthStem + " / " + bzMonthBranch;
 
-        // 3. Tag
+        // Tag
         const bzDayText = stems[dayStemIndex] + " / " + branches[dayBranchIndex];
         document.getElementById('bzDay').textContent = bzDayText;
 
-        // 4. Stunde
+        // Stunde
         const bzHourText = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
         document.getElementById('bzHour').textContent = bzHourText;
       } else {
