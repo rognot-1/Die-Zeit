@@ -24,6 +24,8 @@
     <div style="color: #e91e63; font-weight: bold; margin-bottom: 0.5rem;">⏳ Zeitreise (Geburt / Termin)</div>
     <div class="input-group">
       <input type="datetime-local" id="timeTravelInput">
+            <input type="number" id="inputLat" placeholder="Breite (z.B. 47.47)" step="0.01" style="width: 45%; background: #333; color: #fff; border: 1px solid #555; padding: 0.5rem; border-radius: 5px;">
+      <input type="number" id="inputLng" placeholder="Länge (z.B. 8.30)" step="0.01" style="width: 45%; background: #333; color: #fff; border: 1px solid #555; padding: 0.5rem; border-radius: 5px;">
       <button id="timeTravelBtn" style="background: #e91e63; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">Berechnen</button>
     </div>
     <button id="resetTimeBtn" style="background: #333; color: #ccc; border: 1px solid #555; padding: 0.3rem 0.8rem; border-radius: 5px; cursor: pointer; font-size: 0.8rem; margin-top: 0.5rem;">Zurück zum Jetzt</button>
@@ -224,9 +226,21 @@
     }, 1000);
 
     // --- NEU: Zeitreise-Logik ---
-    document.getElementById('timeTravelBtn').addEventListener('click', () => {
+       document.getElementById('timeTravelBtn').addEventListener('click', () => {
       const inputVal = document.getElementById('timeTravelInput').value;
+      const inputLat = parseFloat(document.getElementById('inputLat').value);
+      const inputLng = parseFloat(document.getElementById('inputLng').value);
+      
       if (inputVal) {
+        // Wenn Koordinaten eingegeben wurden, nutzen wir diese. Sonst bleiben wir bei Mellingen.
+        if (!isNaN(inputLat) && !isNaN(inputLng)) {
+          lat = inputLat;
+          lng = inputLng;
+          locationName = "Zeitreise-Ort";
+        } else {
+          locationName = "Mellingen (Standard)";
+        }
+        
         targetDate = new Date(inputVal);
         isTimeTravel = true;
         updateClock();
@@ -235,10 +249,15 @@
       }
     });
 
-    document.getElementById('resetTimeBtn').addEventListener('click', () => {
+       document.getElementById('resetTimeBtn').addEventListener('click', () => {
       isTimeTravel = false;
       targetDate = new Date();
-      document.getElementById('timeTravelInput').value = ""; // Eingabefeld leeren
+      lat = 47.42; // Zurück zu Mellingen
+      lng = 8.27;
+      locationName = "Mellingen, CH";
+      document.getElementById('timeTravelInput').value = "";
+      document.getElementById('inputLat').value = "";
+      document.getElementById('inputLng').value = "";
       calculateAndDisplay(new Date());
       updateClock();
     });
