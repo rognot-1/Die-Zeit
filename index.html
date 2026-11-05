@@ -260,7 +260,7 @@
         document.getElementById(id).textContent = signs[signIndex];
       }
 
-      // Chinesischer Kalender
+      // Chinesischer Kalender & Ba Zi (Alles an einem Ort, keine Variablenkonflikte)
       const stems = ["Jia (Holz)", "Yi (Holz)", "Bing (Feuer)", "Ding (Feuer)", "Wu (Erde)", "Ji (Erde)", "Geng (Metall)", "Xin (Metall)", "Ren (Wasser)", "Gui (Wasser)"];
       const branches = ["Zi (Ratte)", "Chou (Ochse)", "Yin (Tiger)", "Mao (Hase)", "Chen (Drache)", "Si (Schlange)", "Wu (Pferd)", "Wei (Ziege)", "Shen (Affe)", "You (Hahn)", "Xu (Hund)", "Hai (Schwein)"];
       
@@ -326,35 +326,31 @@
       const ziWuPoint = ziWuMatrix[dayStemIndex][ziWuHourIndex];
       document.getElementById('ziWuPoint').textContent = ziWuPoint;
 
-           // Ba Zi (Vier Säulen) - Absolut fehlerfrei
+      // Ba Zi (Vier Säulen)
       if (isTimeTravel) {
         document.getElementById('baZiData').style.display = 'block';
         
-        // Wir berechnen das chinesische Jahr für das Zeitreise-Datum direkt hier
         let bzYear = now.getFullYear();
-        if (now.getMonth() === 0 || (now.getMonth() === 1 && now.getDate() < 4)) {
-          bzYear = bzYear - 1;
-        }
+        if (now.getMonth() === 0 || (now.getMonth() === 1 && now.getDate() < 4)) bzYear = bzYear - 1;
         const bzYearStemIdx = (bzYear - 1984) % 10;
         const bzYearBranchIdx = (bzYear - 1984) % 12;
-        
         document.getElementById('bzYear').textContent = stems[bzYearStemIdx] + " / " + branches[bzYearBranchIdx];
 
-        // Monat
         let monthBranchIndex = (month + 1) % 12; 
-        const bzMonthBranch = branches[monthBranchIndex];
-        const bzMonthStem = stems[(bzYearStemIdx * 2 + month) % 10];
-        document.getElementById('bzMonth').textContent = bzMonthStem + " / " + bzMonthBranch;
+        document.getElementById('bzMonth').textContent = stems[(bzYearStemIdx * 2 + month) % 10] + " / " + branches[monthBranchIndex];
 
-        // Tag
         document.getElementById('bzDay').textContent = stems[dayStemIndex] + " / " + branches[dayBranchIndex];
 
-        // Stunde
         document.getElementById('bzHour').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
       } else {
         document.getElementById('baZiData').style.display = 'none';
       }
-      
+
+      if (isTimeTravel) {
+        calculateAndDisplay(now);
+      }
+    }
+
     calculateAndDisplay(new Date());
     updateClock();
     setInterval(() => { if (!isTimeTravel) updateClock(); }, 1000);
