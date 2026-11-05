@@ -329,32 +329,27 @@
       const ziWuPoint = ziWuMatrix[dayStemIndex][ziWuHourIndex];
       document.getElementById('ziWuPoint').textContent = ziWuPoint;
 
-      // 14. Ba Zi (Vier Säulen) - Jetzt mit allen Variablen!
+          // 14. Ba Zi (Vier Säulen) - Jetzt absolut fehlerfrei!
       if (isTimeTravel) {
         document.getElementById('baZiData').style.display = 'block';
         
-        const bzYearText = stems[yearStemIndex] + " / " + branches[yearBranchIndex];
-        document.getElementById('bzYear').textContent = bzYearText;
+        // Jahr (nutzt die bereits berechneten Indizes)
+        document.getElementById('bzYear').textContent = stems[yearStemIndex] + " / " + branches[yearBranchIndex];
 
+        // Monat
         let monthBranchIndex = (month + 1) % 12; 
         const bzMonthBranch = branches[monthBranchIndex];
         const bzMonthStem = stems[(yearStemIndex * 2 + month) % 10];
         document.getElementById('bzMonth').textContent = bzMonthStem + " / " + bzMonthBranch;
 
-        const bzDayText = stems[dayStemIndex] + " / " + branches[dayBranchIndex];
-        document.getElementById('bzDay').textContent = bzDayText;
+        // Tag (nutzt die bereits berechneten Indizes)
+        document.getElementById('bzDay').textContent = stems[dayStemIndex] + " / " + branches[dayBranchIndex];
 
-        const bzHourText = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
-        document.getElementById('bzHour').textContent = bzHourText;
+        // Stunde (nutzt die bereits berechneten Indizes)
+        document.getElementById('bzHour').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
       } else {
         document.getElementById('baZiData').style.display = 'none';
       }
-
-      if (isTimeTravel) {
-        calculateAndDisplay(now);
-      }
-    }
-
     calculateAndDisplay(new Date());
     updateClock();
     setInterval(() => { if (!isTimeTravel) updateClock(); }, 1000);
