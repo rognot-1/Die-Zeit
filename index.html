@@ -17,6 +17,13 @@
     .input-group input { background: #333; color: #fff; border: 1px solid #555; padding: 0.6rem; border-radius: 5px; width: 100%; box-sizing: border-box; }
     .btn-pink { background: #e91e63; color: white; border: none; padding: 0.6rem; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
     .btn-grey { background: #333; color: #ccc; border: 1px solid #555; padding: 0.4rem; border-radius: 5px; cursor: pointer; font-size: 0.8rem; width: 100%; margin-top: 0.5rem;}
+    
+    /* Styling für die Ba Gang Tafel */
+    .bagang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem; }
+    .bagang-btn { background: #252540; color: #fff; border: 1px solid #444; padding: 0.6rem; border-radius: 5px; cursor: pointer; font-size: 0.9rem; text-align: center; transition: 0.2s; }
+    .bagang-btn:hover { background: #333355; }
+    .bagang-btn.active { background: #4a148c; border-color: #9c27b0; }
+    .bagang-result { background: #1f1f35; padding: 1rem; border-radius: 8px; border-left: 4px solid #9c27b0; display: none; margin-bottom: 1.5rem; }
   </style>
 </head>
 <body>
@@ -51,12 +58,32 @@
     <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="planetToggle" checked style="accent-color: #00bcd4;"> <span>Planeten</span></label>
     <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="ganzhiToggle" checked style="accent-color: #e91e63;"> <span>Gan-Zhi & Akupunktur</span></label>
     <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="wuXingToggle" checked style="accent-color: #ff9800;"> <span>Wu Xing (Elemente)</span></label>
+    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="baGangToggle" checked style="accent-color: #9c27b0;"> <span>Ba Gang (Diagnostik)</span></label>
   </div>
 
   <div id="tcmBox" style="background: #252540; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem; border-left: 4px solid #ffaa00;">
     <div style="color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Aktuelle TCM-Organzeit</div>
     <div id="tcmOrgan" style="font-size: 1.5rem; font-weight: bold; color: #ffaa00; margin-top: 0.3rem;">Berechne...</div>
     <div style="color: #aaa; font-size: 0.8rem; margin-top: 0.5rem;">Wahre Sonnenzeit: <span id="trueSolarTime" style="color: #ffaa00;">–</span></div>
+  </div>
+
+  <!-- NEU: Ba Gang (Die 8 Leitkriterien) -->
+  <div id="baGangData">
+    <div style="text-align: center; color: #9c27b0; font-weight: bold; margin-bottom: 0.5rem;">Die Acht Leitkriterien (Ba Gang)</div>
+    <div class="bagang-grid">
+      <button class="bagang-btn" data-key="yin">Yin (Leere/Kälte)</button>
+      <button class="bagang-btn" data-key="yang">Yang (Fülle/Hitze)</button>
+      <button class="bagang-btn" data-key="innen">Innen (Zang/Fu)</button>
+      <button class="bagang-btn" data-key="aussen">Außen (Haut/Muskeln)</button>
+      <button class="bagang-btn" data-key="kaelte">Kälte</button>
+      <button class="bagang-btn" data-key="hitze">Hitze</button>
+      <button class="bagang-btn" data-key="leere">Leere (Mangel)</button>
+      <button class="bagang-btn" data-key="fuelle">Fülle (Überschuss)</button>
+    </div>
+    <div id="bagangResultBox" class="bagang-result">
+      <div id="bagangTitle" style="font-weight: bold; color: #9c27b0; margin-bottom: 0.5rem;">–</div>
+      <div id="bagangStrategy" style="font-size: 0.9rem; line-height: 1.4;">–</div>
+    </div>
   </div>
 
   <div id="wuXingData">
@@ -96,7 +123,6 @@
     <div class="row"><span class="label">Tages-Gan-Zhi</span><span class="value" id="dayGanZhi" style="color: #e91e63; font-weight: bold;">–</span></div>
     <div class="row"><span class="label">Stunden-Gan-Zhi</span><span class="value" id="hourGanZhi" style="color: #e91e63; font-weight: bold;">–</span></div>
     
-    <!-- NEU: Der Punkt des Tages -->
     <div class="row" style="background: #2a1a2a; padding-left: 0.5rem; padding-right: 0.5rem; margin-top: 0.5rem; border-left: 3px solid #e91e63;">
       <span class="label" style="color: #e91e63;">Punkt des Tages (Stamm)</span>
       <span class="value" id="dailyPoint" style="color: #03a9f4; font-weight: bold;">–</span>
@@ -251,30 +277,16 @@
       const hourStemIndex = (hourStemBase + hourBranchIndex) % 10;
       document.getElementById('hourGanZhi').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
 
-      // --- NEU: Punkt des Tages (Tages-Stamm Methode) ---
-      // Klassische Zuordnung der 5 antiken Punkte zu den 10 Himmelsstämmen.
-      // (Dies ist eine verbreitete klassische Zuordnung, die Tabelle kann je nach Schule variieren).
+      // Punkt des Tages (Tages-Stamm Methode)
       const dailyPoints = [
-        "Jing-Well (Brunnen)",  // Jia
-        "Ying-Spring (Quelle)", // Yi
-        "Shu-Stream (Bach)",    // Bing
-        "Jing-River (Fluss)",   // Ding
-        "He-Sea (Meer)",        // Wu
-        "Jing-Well (Brunnen)",  // Ji
-        "Ying-Spring (Quelle)", // Geng
-        "Shu-Stream (Bach)",    // Xin
-        "Jing-River (Fluss)",   // Ren
-        "He-Sea (Meer)"         // Gui
+        "Jing-Well (Brunnen)", "Ying-Spring (Quelle)", "Shu-Stream (Bach)", "Jing-River (Fluss)", "He-Sea (Meer)",
+        "Jing-Well (Brunnen)", "Ying-Spring (Quelle)", "Shu-Stream (Bach)", "Jing-River (Fluss)", "He-Sea (Meer)"
       ];
       document.getElementById('dailyPoint').textContent = dailyPoints[dayStemIndex];
 
       // Akupunktur-Punkte (Stunde)
       const shuPoints = [
-        "Jing-Well (Brunnenpunkt)", 
-        "Ying-Spring (Quellpunkt)", 
-        "Shu-Stream (Bachpunkt)", 
-        "Jing-River (Flusspunkt)", 
-        "He-Sea (Meerpunkt)"
+        "Jing-Well (Brunnenpunkt)", "Ying-Spring (Quellpunkt)", "Shu-Stream (Bachpunkt)", "Jing-River (Flusspunkt)", "He-Sea (Meerpunkt)"
       ];
       const pointIndex = hourBranchIndex % 5;
       document.getElementById('acupoint').textContent = shuPoints[pointIndex];
@@ -288,16 +300,13 @@
     updateClock();
     setInterval(() => { if (!isTimeTravel) updateClock(); }, 1000);
 
-    // Zeitreise mit Ortssuche
+    // Zeitreise
     document.getElementById('timeTravelBtn').addEventListener('click', () => {
       const inputVal = document.getElementById('timeTravelInput').value;
       const inputLocation = document.getElementById('locationInput').value;
       const status = document.getElementById('statusText');
 
-      if (!inputVal) {
-        alert("Bitte wähle ein Datum und eine Uhrzeit.");
-        return;
-      }
+      if (!inputVal) { alert("Bitte wähle ein Datum und eine Uhrzeit."); return; }
 
       if (inputLocation.trim() !== "") {
         status.textContent = "Suche Ort...";
@@ -305,29 +314,19 @@
           .then(response => response.json())
           .then(data => {
             if (data && data.length > 0) {
-              lat = parseFloat(data[0].lat);
-              lng = parseFloat(data[0].lon);
+              lat = parseFloat(data[0].lat); lng = parseFloat(data[0].lon);
               locationName = data[0].display_name.split(',')[0]; 
               status.textContent = `Ort gefunden: ${locationName}`;
-              targetDate = new Date(inputVal);
-              isTimeTravel = true;
-              updateClock();
+              targetDate = new Date(inputVal); isTimeTravel = true; updateClock();
             } else {
               status.textContent = "Ort nicht gefunden. Nutze Mellingen.";
-              targetDate = new Date(inputVal);
-              isTimeTravel = true;
-              updateClock();
+              targetDate = new Date(inputVal); isTimeTravel = true; updateClock();
             }
           })
-          .catch(err => {
-            status.textContent = "Fehler bei der Ortssuche.";
-            console.error(err);
-          });
+          .catch(err => { status.textContent = "Fehler bei der Ortssuche."; console.error(err); });
       } else {
         lat = 47.42; lng = 8.27; locationName = "Mellingen, CH";
-        targetDate = new Date(inputVal);
-        isTimeTravel = true;
-        updateClock();
+        targetDate = new Date(inputVal); isTimeTravel = true; updateClock();
       }
     });
 
@@ -356,10 +355,39 @@
     });
 
     // Schalter
-    ['tcm', 'moon', 'sidereal', 'farmer', 'planet', 'ganzhi', 'wuXing'].forEach(type => {
+    ['tcm', 'moon', 'sidereal', 'farmer', 'planet', 'ganzhi', 'wuXing', 'baGang'].forEach(type => {
       document.getElementById(type + 'Toggle').addEventListener('change', (event) => {
         const box = document.getElementById(type === 'tcm' ? 'tcmBox' : type + 'Data');
         if (box) box.style.display = event.target.checked ? 'block' : 'none';
+      });
+    });
+
+    // --- NEU: Logik für die Ba Gang (Acht Leitkriterien) ---
+    const baGangData = {
+      yin: { title: "Yin", text: "Zeichen von Kälte, Leere und chronischen Zuständen. Behandlung: Wärmen, Tonisieren (z.B. Ren 4, Niere 3)." },
+      yang: { title: "Yang", text: "Zeichen von Hitze, Fülle und akuten Zuständen. Behandlung: Kühlen, Sedieren (z.B. Di 11, Du 14)." },
+      innen: { title: "Innen", text: "Die Krankheit sitzt in den Zang-Fu Organen. Behandlung: Die inneren Organe regulieren (z.B. über Mu- oder Shu-Punkte)." },
+      aussen: { title: "Außen", text: "Die Krankheit sitzt in Haut, Muskeln und Meridianen (z.B. Wind-Kälte). Behandlung: Schwitzen lassen, Äußeres lösen (z.B. Di 4, Lu 7)." },
+      kaelte: { title: "Kälte", text: "Zeichen: Frösteln, kalte Gliedmaßen, blasses Gesicht. Behandlung: Wärmen (Moxa), Kälte vertreiben (z.B. Ren 8, Ma 36)." },
+      hitze: { title: "Hitze", text: "Zeichen: Rotes Gesicht, Durst, Fieber. Behandlung: Hitze klären (z.B. Di 11, Du 14, Ma 44)." },
+      leere: { title: "Leere (Mangel)", text: "Zeichen: Erschöpfung, Schwäche, chronischer Verlauf. Behandlung: Tonisieren (Stärken) der betroffenen Organe (z.B. Ma 36, Ren 6)." },
+      fuelle: { title: "Fülle (Überschuss)", text: "Zeichen: Starke Schmerzen, Druck, akuter Verlauf. Behandlung: Sedieren (Ableiten) der pathogenen Faktoren (z.B. Lu 5, Ma 44)." }
+    };
+
+    document.querySelectorAll('.bagang-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Alle Buttons zurücksetzen
+        document.querySelectorAll('.bagang-btn').forEach(b => b.classList.remove('active'));
+        // Angeklickten Button markieren
+        btn.classList.add('active');
+        
+        // Daten auslesen und anzeigen
+        const key = btn.getAttribute('data-key');
+        const data = baGangData[key];
+        
+        document.getElementById('bagangTitle').textContent = data.title;
+        document.getElementById('bagangStrategy').textContent = data.text;
+        document.getElementById('bagangResultBox').style.display = 'block';
       });
     });
   </script>
