@@ -30,7 +30,7 @@
       <input type="text" id="locationInput" placeholder="Ort (z.B. Baden, Schweiz)">
     </div>
     <button id="timeTravelBtn" class="btn-pink">Berechnen</button>
-    <button id="resetTimeBtn" class="btn-grey">Zurück zum Jetzt</button>
+    <button id="resetTimeBtn" class="btn-grey">Zurück zum Jetzt (Mellingen)</button>
     <div id="statusText" style="font-size: 0.8rem; color: #aaa; margin-top: 0.5rem;"></div>
   </div>
 
@@ -50,12 +50,20 @@
     <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="farmerToggle" checked style="accent-color: #4caf50;"> <span>Bauernkalender</span></label>
     <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="planetToggle" checked style="accent-color: #00bcd4;"> <span>Planeten</span></label>
     <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="ganzhiToggle" checked style="accent-color: #e91e63;"> <span>Gan-Zhi & Akupunktur</span></label>
+    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="wuXingToggle" checked style="accent-color: #ff9800;"> <span>Wu Xing (Elemente)</span></label>
   </div>
 
   <div id="tcmBox" style="background: #252540; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem; border-left: 4px solid #ffaa00;">
     <div style="color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Aktuelle TCM-Organzeit</div>
     <div id="tcmOrgan" style="font-size: 1.5rem; font-weight: bold; color: #ffaa00; margin-top: 0.3rem;">Berechne...</div>
     <div style="color: #aaa; font-size: 0.8rem; margin-top: 0.5rem;">Wahre Sonnenzeit: <span id="trueSolarTime" style="color: #ffaa00;">–</span></div>
+  </div>
+
+  <!-- NEU: Wu Xing (Fünf Wandlungsphasen) -->
+  <div id="wuXingData">
+    <div class="row"><span class="label">Aktives Element (Stunde)</span><span class="value" id="currentElement" style="color: #ff9800; font-weight: bold;">–</span></div>
+    <div class="row"><span class="label">Jahreszeit (TCM)</span><span class="value" id="tcmSeason" style="color: #ff9800; font-weight: bold;">–</span></div>
+    <div class="row"><span class="label">Jahres-Element (Gan-Zhi)</span><span class="value" id="yearElement" style="color: #ff9800; font-weight: bold;">–</span></div>
   </div>
 
   <div class="row"><span class="label">Sonnenaufgang</span><span class="value" id="sunrise">–</span></div>
@@ -140,23 +148,55 @@
       const trueHour = parseInt(trueSolarTime.toLocaleTimeString('de-CH', { hour: '2-digit', hour12: false }));
       document.getElementById('trueSolarTime').textContent = trueSolarTime.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich' });
 
-      // TCM
+      // TCM Organuhr
       const organs = [
-        { start: 23, name: "Gallenblase (GB)" }, { start: 1, name: "Leber (LE)" }, { start: 3, name: "Lunge (LU)" }, { start: 5, name: "Dickdarm (DI)" },
-        { start: 7, name: "Magen (MA)" }, { start: 9, name: "Milz (MP)" }, { start: 11, name: "Herz (HE)" }, { start: 13, name: "Dünndarm (DÜ)" },
-        { start: 15, name: "Blase (BL)" }, { start: 17, name: "Niere (NI)" }, { start: 19, name: "Perikard (PE)" }, { start: 21, name: "Sanjiao (3E)" }
+        { start: 23, name: "Gallenblase (GB)", element: "Holz" }, { start: 1, name: "Leber (LE)", element: "Holz" }, 
+        { start: 3, name: "Lunge (LU)", element: "Metall" }, { start: 5, name: "Dickdarm (DI)", element: "Metall" },
+        { start: 7, name: "Magen (MA)", element: "Erde" }, { start: 9, name: "Milz (MP)", element: "Erde" }, 
+        { start: 11, name: "Herz (HE)", element: "Feuer" }, { start: 13, name: "Dünndarm (DÜ)", element: "Feuer" },
+        { start: 15, name: "Blase (BL)", element: "Wasser" }, { start: 17, name: "Niere (NI)", element: "Wasser" }, 
+        { start: 19, name: "Perikard (PE)", element: "Feuer" }, { start: 21, name: "Sanjiao (3E)", element: "Feuer" }
       ];
       let currentOrgan = "Unbekannt";
+      let currentElement = "Unbekannt";
       for (let i = 0; i < organs.length; i++) {
         let current = organs[i];
         let next = organs[(i + 1) % organs.length];
+        let isMatch = false;
         if (current.start < next.start) {
-          if (trueHour >= current.start && trueHour < next.start) { currentOrgan = current.name; break; }
+          if (trueHour >= current.start && trueHour < next.start) isMatch = true;
         } else {
-          if (trueHour >= current.start || trueHour < next.start) { currentOrgan = current.name; break; }
+          if (trueHour >= current.start || trueHour < next.start) isMatch = true;
+        }
+        if (isMatch) { 
+          currentOrgan = current.name; 
+          currentElement = current.element; 
+          break; 
         }
       }
       document.getElementById('tcmOrgan').textContent = currentOrgan;
+      document.getElementById('currentElement').textContent = currentElement;
+
+      // --- NEU: Jahreszeit nach TCM (Wu Xing) ---
+      // Die TCM-Jahreszeiten richten sich nach den Solstitien und Äquinoktien.
+      // Frühling (Holz): Frühlingsäquinoktium bis Sommersonnenwende (ca. 20. März - 21. Juni)
+      // Sommer (Feuer): Sommersonnenwende bis Herbstäquinoktium (ca. 21. Juni - 22. September)
+      // Herbst (Metall): Herbstäquinoktium bis Wintersonnenwende (ca. 22. September - 21. Dezember)
+      // Winter (Wasser): Wintersonnenwende bis Frühlingsäquinoktium (ca. 21. Dezember - 20. März)
+      // Spätsommer (Erde): Die Übergangszeiten (ca. die letzten 18 Tage jeder Jahreszeit, hier vereinfacht: Ende August bis Anfang September)
+      const month = now.getMonth() + 1; // 1-12
+      const day = now.getDate();
+      let season = "Unbekannt";
+      
+      if ((month === 3 && day >= 20) || month === 4 || month === 5 || (month === 6 && day < 21)) season = "Frühling (Holz)";
+      else if ((month === 6 && day >= 21) || month === 7 || month === 8 || (month === 9 && day < 22)) season = "Sommer (Feuer)";
+      else if ((month === 9 && day >= 22) || month === 10 || month === 11 || (month === 12 && day < 21)) season = "Herbst (Metall)";
+      else season = "Winter (Wasser)";
+      
+      // Spätsommer (Erde) als Übergangszeit (vereinfacht für die 18 Tage vor den Äquinoktien)
+      if ((month === 8 && day >= 23) || (month === 9 && day < 10)) season = "Spätsommer (Erde)"; // Vereinfachte Übergangszeit
+
+      document.getElementById('tcmSeason').textContent = season;
 
       // Sternzeit
       const jd = (now.getTime() / 86400000) + 2440587.5;
@@ -199,6 +239,15 @@
       const yearStemIndex = (currentYear - 1984 + 0) % 10;
       const yearBranchIndex = (currentYear - 1984 + 0) % 12;
       document.getElementById('chineseYear').textContent = stems[yearStemIndex] + " / " + branches[yearBranchIndex];
+      
+      // Jahres-Element (Himmelsstamm)
+      let yearElement = "Unbekannt";
+      if (yearStemIndex < 2) yearElement = "Holz";
+      else if (yearStemIndex < 4) yearElement = "Feuer";
+      else if (yearStemIndex < 6) yearElement = "Erde";
+      else if (yearStemIndex < 8) yearElement = "Metall";
+      else yearElement = "Wasser";
+      document.getElementById('yearElement').textContent = yearElement + "-Jahr";
 
       const daysSince1900 = Math.floor((now.getTime() - new Date(1900, 0, 1).getTime()) / 86400000);
       const dayStemIndex = (daysSince1900 + 0) % 10;
@@ -211,9 +260,7 @@
       const hourStemIndex = (hourStemBase + hourBranchIndex) % 10;
       document.getElementById('hourGanZhi').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
 
-      // --- NEU: Die klassischen 5 antiken Punkte (Na Zi) ---
-      // Dies sind die 5 Shu-Punkte (Transport-Punkte) an den Gliedmaßen. 
-      // Sie werden nach der klassischen Na-Zi-Methode der aktuellen Stunde zugeordnet.
+      // Akupunktur-Punkte
       const shuPoints = [
         "Jing-Well (Brunnenpunkt)", 
         "Ying-Spring (Quellpunkt)", 
@@ -221,12 +268,7 @@
         "Jing-River (Flusspunkt)", 
         "He-Sea (Meerpunkt)"
       ];
-      
-      // Die klassische Zuordnung: 
-      // Wir nutzen den Stunden-Zweig (hourBranchIndex) modulo 5, um den Punkt im Zyklus zu bestimmen.
       const pointIndex = hourBranchIndex % 5;
-      
-      // Für Therapeuten zeigen wir den Fachbegriff + die deutsche Entsprechung
       document.getElementById('acupoint').textContent = shuPoints[pointIndex];
       
       if (isTimeTravel) {
@@ -298,26 +340,19 @@
       updateClock();
     });
 
-    // --- NEU: Der reparierte GPS-Button ---
+    // GPS
     document.getElementById('gpsBtn').addEventListener('click', () => {
       if (navigator.geolocation) {
         document.getElementById('gpsBtn').textContent = "📍 Suche Standort...";
         navigator.geolocation.getCurrentPosition((position) => {
-            // 1. Koordinaten vom GPS holen
             lat = position.coords.latitude; 
             lng = position.coords.longitude;
             locationName = "Aktueller Standort";
-            
-            // 2. Zeitreise beenden (zurück zum Jetzt)
             isTimeTravel = false;
             targetDate = new Date();
-            
-            // 3. Eingabefelder leeren
             document.getElementById('timeTravelInput').value = "";
             document.getElementById('locationInput').value = "";
             document.getElementById('statusText').textContent = "GPS-Standort übernommen.";
-            
-            // 4. Alles neu berechnen
             document.getElementById('gpsBtn').textContent = "📍 Standort aktualisiert!";
             calculateAndDisplay(new Date()); 
             updateClock();
@@ -327,7 +362,8 @@
       }
     });
 
-    ['tcm', 'moon', 'sidereal', 'farmer', 'planet', 'ganzhi'].forEach(type => {
+    // Schalter
+    ['tcm', 'moon', 'sidereal', 'farmer', 'planet', 'ganzhi', 'wuXing'].forEach(type => {
       document.getElementById(type + 'Toggle').addEventListener('change', (event) => {
         const box = document.getElementById(type === 'tcm' ? 'tcmBox' : type + 'Data');
         if (box) box.style.display = event.target.checked ? 'block' : 'none';
