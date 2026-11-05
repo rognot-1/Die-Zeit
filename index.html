@@ -372,4 +372,108 @@
         document.getElementById('bzYear').textContent = stems[bzYearStemIdx] + " / " + branches[bzYearBranchIdx];
 
         let monthBranchIndex = (month + 1) % 12; 
-        document.getElementById('bzMonth').textContent = stems[(bzYearStemIdx * 2 + month
+        document.getElementById('bzMonth').textContent = stems[(bzYearStemIdx * 2 + month) % 10] + " / " + branches[monthBranchIndex];
+
+        document.getElementById('bzDay').textContent = stems[dayStemIndex] + " / " + branches[dayBranchIndex];
+        document.getElementById('bzHour').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
+      } else {
+        document.getElementById('baZiData').style.display = 'none';
+      }
+
+      if (isTimeTravel) {
+        calculateAndDisplay(now);
+      }
+    }
+
+    calculateAndDisplay(new Date());
+    updateClock();
+    setInterval(() => { if (!isTimeTravel) updateClock(); }, 1000);
+
+    // Zeitreise
+    document.getElementById('timeTravelBtn').addEventListener('click', () => {
+      const inputVal = document.getElementById('timeTravelInput').value;
+      const inputLocation = document.getElementById('locationInput').value;
+      const status = document.getElementById('statusText');
+
+      if (!inputVal) { alert("Bitte wähle ein Datum und eine Uhrzeit."); return; }
+
+      if (inputLocation.trim() !== "") {
+        status.textContent = "Suche Ort...";
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(inputLocation)}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data && data.length > 0) {
+              lat = parseFloat(data[0].lat); lng = parseFloat(data[0].lon);
+              locationName = data[0].display_name.split(',')[0]; 
+              status.textContent = `Ort gefunden: ${locationName}`;
+              targetDate = new Date(inputVal); isTimeTravel = true; updateClock();
+            } else {
+              status.textContent = "Ort nicht gefunden. Nutze Mellingen.";
+              targetDate = new Date(inputVal); isTimeTravel = true; updateClock();
+            }
+          })
+          .catch(err => { status.textContent = "Fehler bei der Ortssuche."; console.error(err); });
+      } else {
+        lat = 47.42; lng = 8.27; locationName = "Mellingen, CH";
+        targetDate = new Date(inputVal); isTimeTravel = true; updateClock();
+      }
+    });
+
+    document.getElementById('resetTimeBtn').addEventListener('click', () => {
+      isTimeTravel = false; targetDate = new Date(); lat = 47.42; lng = 8.27; locationName = "Mellingen, CH";
+      document.getElementById('timeTravelInput').value = ""; document.getElementById('locationInput').value = "";
+      document.getElementById('statusText').textContent = "";
+      calculateAndDisplay(new Date()); updateClock();
+    });
+
+    // GPS
+    document.getElementById('gpsBtn').addEventListener('click', () => {
+      if (navigator.geolocation) {
+        document.getElementById('gpsBtn').textContent = "📍 Suche Standort...";
+        navigator.geolocation.getCurrentPosition((position) => {
+            lat = position.coords.latitude; lng = position.coords.longitude; locationName = "Aktueller Standort";
+            isTimeTravel = false; targetDate = new Date();
+            document.getElementById('timeTravelInput').value = ""; document.getElementById('locationInput').value = "";
+            document.getElementById('statusText').textContent = "GPS-Standort übernommen.";
+            document.getElementById('gpsBtn').textContent = "📍 Standort aktualisiert!";
+            calculateAndDisplay(new Date()); updateClock();
+          }, (error) => {
+            document.getElementById('gpsBtn').textContent = "📍 Standort verweigert";
+          });
+      }
+    });
+
+    // Schalter
+    ['tcm', 'moon', 'sidereal', 'farmer', 'ganzhi', 'baGang'].forEach(type => {
+      document.getElementById(type + 'Toggle').addEventListener('change', (event) => {
+        const box = document.getElementById(type + 'Data');
+        if (box) box.style.display = event.target.checked ? 'block' : 'none';
+      });
+    });
+
+    // Ba Gang Logik
+    const baGangData = {
+      yin: { title: "Yin", text: "Zeichen von Kälte, Leere und chronischen Zuständen. Behandlung: Wärmen, Tonisieren (z.B. Ren 4, Niere 3)." },
+      yang: { title: "Yang", text: "Zeichen von Hitze, Fülle und akuten Zuständen. Behandlung: Kühlen, Sedieren (z.B. Di 11, Du 14)." },
+      innen: { title: "Innen", text: "Die Krankheit sitzt in den Zang-Fu Organen. Behandlung: Die inneren Organe regulieren (z.B. über Mu- oder Shu-Punkte)." },
+      aussen: { title: "Außen", text: "Die Krankheit sitzt in Haut, Muskeln und Meridianen (z.B. Wind-Kälte). Behandlung: Schwitzen lassen, Äußeres lösen (z.B. Di 4, Lu 7)." },
+      kaelte: { title: "Kälte", text: "Zeichen: Frösteln, kalte Gliedmaßen, blasses Gesicht. Behandlung: Wärmen (Moxa), Kälte vertreiben (z.B. Ren 8, Ma 36)." },
+      hitze: { title: "Hitze", text: "Zeichen: Rotes Gesicht, Durst, Fieber. Behandlung: Hitze klären (z.B. Di 11, Du 14, Ma 44)." },
+      leere: { title: "Leere (Mangel)", text: "Zeichen: Erschöpfung, Schwäche, chronischer Verlauf. Behandlung: Tonisieren (Stärken) der betroffenen Organe (z.B. Ma 36, Ren 6)." },
+      fuelle: { title: "Fülle (Überschuss)", text: "Zeichen: Starke Schmerzen, Druck, akuter Verlauf. Behandlung: Sedieren (Ableiten) der pathogenen Faktoren (z.B. Lu 5, Ma 44)." }
+    };
+
+    document.querySelectorAll('.bagang-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.bagang-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const key = btn.getAttribute('data-key');
+        const data = baGangData[key];
+        document.getElementById('bagangTitle').textContent = data.title;
+        document.getElementById('bagangStrategy').textContent = data.text;
+        document.getElementById('bagangResultBox').style.display = 'block';
+      });
+    });
+  </script>
+</body>
+</html>
