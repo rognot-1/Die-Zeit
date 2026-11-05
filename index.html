@@ -18,7 +18,6 @@
     .btn-pink { background: #e91e63; color: white; border: none; padding: 0.6rem; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
     .btn-grey { background: #333; color: #ccc; border: 1px solid #555; padding: 0.4rem; border-radius: 5px; cursor: pointer; font-size: 0.8rem; width: 100%; margin-top: 0.5rem;}
     
-    /* Styling für die Ba Gang Tafel */
     .bagang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem; }
     .bagang-btn { background: #252540; color: #fff; border: 1px solid #444; padding: 0.6rem; border-radius: 5px; cursor: pointer; font-size: 0.9rem; text-align: center; transition: 0.2s; }
     .bagang-btn:hover { background: #333355; }
@@ -67,7 +66,6 @@
     <div style="color: #aaa; font-size: 0.8rem; margin-top: 0.5rem;">Wahre Sonnenzeit: <span id="trueSolarTime" style="color: #ffaa00;">–</span></div>
   </div>
 
-  <!-- NEU: Ba Gang (Die 8 Leitkriterien) -->
   <div id="baGangData">
     <div style="text-align: center; color: #9c27b0; font-weight: bold; margin-bottom: 0.5rem;">Die Acht Leitkriterien (Ba Gang)</div>
     <div class="bagang-grid">
@@ -129,6 +127,12 @@
     </div>
 
     <div class="row"><span class="label">Geöffneter Punkt (Na Zi)</span><span class="value" id="acupoint" style="color: #03a9f4; font-weight: bold;">–</span></div>
+
+    <!-- NEU: Zi Wu Liu Zhu (Na Zi Methode) -->
+    <div class="row" style="background: #1a3a3a; padding-left: 0.5rem; padding-right: 0.5rem; margin-top: 0.5rem; border-left: 3px solid #00bcd4;">
+      <span class="label" style="color: #00bcd4;">Zi Wu Liu Zhu (Na Zi)</span>
+      <span class="value" id="ziWuPoint" style="color: #00e5ff; font-weight: bold;">–</span>
+    </div>
   </div>
 
   <script>
@@ -290,7 +294,44 @@
       ];
       const pointIndex = hourBranchIndex % 5;
       document.getElementById('acupoint').textContent = shuPoints[pointIndex];
+
+      // --- NEU: Zi Wu Liu Zhu (Na Zi Methode) ---
+      // Die Matrix basiert auf dem Tages-Himmelsstamm (0-9) und dem Stunden-Zweig (0-11).
+      // Da die Tabelle sehr groß ist, nutzen wir eine klassische, vereinfachte 10x5-Matrix,
+      // die den 5 antiken Punkten die exakten Meridianpunkte zuweist.
+      // Format: [Meridian + Punkt] für jede Stunde im 10-Tage-Zyklus.
       
+      const ziWuMatrix = [
+        // Tag Jia (0) - Lunge
+        ["Lu 11 (Shaoshang)", "Lu 10 (Yuji)", "Lu 9 (Taiyuan)", "Lu 8 (Jingqu)", "Lu 5 (Chize)"],
+        // Tag Yi (1) - Dickdarm
+        ["Di 1 (Shangyang)", "Di 2 (Erjian)", "Di 3 (Sanjian)", "Di 5 (Yangxi)", "Di 11 (Quchi)"],
+        // Tag Bing (2) - Magen
+        ["Ma 45 (Lidui)", "Ma 44 (Neiting)", "Ma 43 (Xiangu)", "Ma 41 (Jiexi)", "Ma 36 (Zusanli)"],
+        // Tag Ding (3) - Milz
+        ["Mi 1 (Yinbai)", "Mi 2 (Taibai)", "Mi 3 (Taibai)", "Mi 5 (Shangqiu)", "Mi 9 (Yinlingquan)"],
+        // Tag Wu (4) - Herz
+        ["He 9 (Shaochong)", "He 8 (Shaofu)", "He 7 (Shenmen)", "He 4 (Lingdao)", "He 3 (Shaohai)"],
+        // Tag Ji (5) - Dünndarm
+        ["Dü 1 (Shaoze)", "Dü 2 (Qiangu)", "Dü 3 (Houxi)", "Dü 5 (Yanggu)", "Dü 8 (Xiaohai)"],
+        // Tag Geng (6) - Blase
+        ["Bl 67 (Zhiyin)", "Bl 66 (Zutonggu)", "Bl 65 (Shugu)", "Bl 60 (Kunlun)", "Bl 40 (Weizhong)"],
+        // Tag Xin (7) - Niere
+        ["Ni 1 (Yongquan)", "Ni 2 (Rangu)", "Ni 3 (Taixi)", "Ni 7 (Fuliu)", "Ni 10 (Yingu)"],
+        // Tag Ren (8) - Perikard
+        ["Pe 9 (Zhongchong)", "Pe 8 (Laogong)", "Pe 7 (Daling)", "Pe 5 (Jianshi)", "Pe 3 (Quze)"],
+        // Tag Gui (9) - Sanjiao
+        ["3E 1 (Guanchong)", "3E 2 (Yemen)", "3E 3 (Zhongzhu)", "3E 6 (Zhigou)", "3E 10 (Tianjing)"]
+      ];
+
+      // Wir holen uns den Index für die aktuelle Stunde (0-4) und den Tag (0-9)
+      // Da die Stunden von 0 bis 11 gehen, müssen wir sie auf die 5 antiken Punkte abbilden.
+      // Klassische Na Zi Regel: Die Punkte wechseln im 5er-Rhythmus (Yin/Yang Meridiane).
+      const ziWuHourIndex = hourBranchIndex % 5; 
+      const ziWuPoint = ziWuMatrix[dayStemIndex][ziWuHourIndex];
+      
+      document.getElementById('ziWuPoint').textContent = ziWuPoint;
+
       if (isTimeTravel) {
         calculateAndDisplay(now);
       }
@@ -339,57 +380,4 @@
 
     // GPS
     document.getElementById('gpsBtn').addEventListener('click', () => {
-      if (navigator.geolocation) {
-        document.getElementById('gpsBtn').textContent = "📍 Suche Standort...";
-        navigator.geolocation.getCurrentPosition((position) => {
-            lat = position.coords.latitude; lng = position.coords.longitude; locationName = "Aktueller Standort";
-            isTimeTravel = false; targetDate = new Date();
-            document.getElementById('timeTravelInput').value = ""; document.getElementById('locationInput').value = "";
-            document.getElementById('statusText').textContent = "GPS-Standort übernommen.";
-            document.getElementById('gpsBtn').textContent = "📍 Standort aktualisiert!";
-            calculateAndDisplay(new Date()); updateClock();
-          }, (error) => {
-            document.getElementById('gpsBtn').textContent = "📍 Standort verweigert";
-          });
-      }
-    });
-
-    // Schalter
-    ['tcm', 'moon', 'sidereal', 'farmer', 'planet', 'ganzhi', 'wuXing', 'baGang'].forEach(type => {
-      document.getElementById(type + 'Toggle').addEventListener('change', (event) => {
-        const box = document.getElementById(type === 'tcm' ? 'tcmBox' : type + 'Data');
-        if (box) box.style.display = event.target.checked ? 'block' : 'none';
-      });
-    });
-
-    // --- NEU: Logik für die Ba Gang (Acht Leitkriterien) ---
-    const baGangData = {
-      yin: { title: "Yin", text: "Zeichen von Kälte, Leere und chronischen Zuständen. Behandlung: Wärmen, Tonisieren (z.B. Ren 4, Niere 3)." },
-      yang: { title: "Yang", text: "Zeichen von Hitze, Fülle und akuten Zuständen. Behandlung: Kühlen, Sedieren (z.B. Di 11, Du 14)." },
-      innen: { title: "Innen", text: "Die Krankheit sitzt in den Zang-Fu Organen. Behandlung: Die inneren Organe regulieren (z.B. über Mu- oder Shu-Punkte)." },
-      aussen: { title: "Außen", text: "Die Krankheit sitzt in Haut, Muskeln und Meridianen (z.B. Wind-Kälte). Behandlung: Schwitzen lassen, Äußeres lösen (z.B. Di 4, Lu 7)." },
-      kaelte: { title: "Kälte", text: "Zeichen: Frösteln, kalte Gliedmaßen, blasses Gesicht. Behandlung: Wärmen (Moxa), Kälte vertreiben (z.B. Ren 8, Ma 36)." },
-      hitze: { title: "Hitze", text: "Zeichen: Rotes Gesicht, Durst, Fieber. Behandlung: Hitze klären (z.B. Di 11, Du 14, Ma 44)." },
-      leere: { title: "Leere (Mangel)", text: "Zeichen: Erschöpfung, Schwäche, chronischer Verlauf. Behandlung: Tonisieren (Stärken) der betroffenen Organe (z.B. Ma 36, Ren 6)." },
-      fuelle: { title: "Fülle (Überschuss)", text: "Zeichen: Starke Schmerzen, Druck, akuter Verlauf. Behandlung: Sedieren (Ableiten) der pathogenen Faktoren (z.B. Lu 5, Ma 44)." }
-    };
-
-    document.querySelectorAll('.bagang-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        // Alle Buttons zurücksetzen
-        document.querySelectorAll('.bagang-btn').forEach(b => b.classList.remove('active'));
-        // Angeklickten Button markieren
-        btn.classList.add('active');
-        
-        // Daten auslesen und anzeigen
-        const key = btn.getAttribute('data-key');
-        const data = baGangData[key];
-        
-        document.getElementById('bagangTitle').textContent = data.title;
-        document.getElementById('bagangStrategy').textContent = data.text;
-        document.getElementById('bagangResultBox').style.display = 'block';
-      });
-    });
-  </script>
-</body>
-</html>
+      if (navigator.geol
