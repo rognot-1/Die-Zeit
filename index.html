@@ -6,68 +6,165 @@
   <title>Zeitmesser – Die-Zeit</title>
   <script src="https://cdn.jsdelivr.net/npm/suncalc@1.9.0/suncalc.js"></script>
   <style>
-    body { font-family: system-ui, sans-serif; max-width: 500px; margin: 2rem auto; padding: 0 1rem; background: #1a1a2e; color: #eaeaea; }
-    h1 { font-weight: 300; letter-spacing: 0.05em; }
-    .row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333; }
-    .label { color: #aaa; }
-    .value { font-variant-numeric: tabular-nums; }
+    :root {
+      --bg-color: #121220;
+      --card-bg: #1e1e30;
+      --text-main: #eaeaea;
+      --text-muted: #888;
+      --accent-gold: #ffaa00;
+      --accent-pink: #e91e63;
+      --accent-green: #4caf50;
+      --accent-blue: #00bcd4;
+      --border-color: #333;
+    }
+    body { font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 1rem; background: var(--bg-color); color: var(--text-main); }
+    h1 { font-weight: 300; letter-spacing: 0.05em; text-align: center; margin-bottom: 0.5rem; }
+    .location-text { color: var(--text-muted); text-align: center; font-size: 0.9rem; margin-bottom: 2rem; }
     
-    .time-travel-box { background: #1f1f35; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #e91e63; text-align: center; }
+    /* Karten-Architektur */
+    .card { background: var(--card-bg); border-radius: 12px; padding: 1.2rem; margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border: 1px solid var(--border-color); }
+    .card-header { font-size: 1.1rem; font-weight: bold; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
+    .card-header.nature { color: var(--accent-green); }
+    .card-header.tcm { color: var(--accent-gold); }
+    .card-header.baGang { color: #9c27b0; }
+    
+    .row { display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .row:last-child { border-bottom: none; }
+    .label { color: var(--text-muted); font-size: 0.9rem; }
+    .value { font-variant-numeric: tabular-nums; font-weight: 500; }
+    
+    /* Zeitreise */
+    .time-travel-box { background: linear-gradient(145deg, #1f1f35, #2a1a2a); border: 1px solid var(--accent-pink); }
     .input-group { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.8rem; }
-    .input-group input { background: #333; color: #fff; border: 1px solid #555; padding: 0.6rem; border-radius: 5px; width: 100%; box-sizing: border-box; }
-    .btn-pink { background: #e91e63; color: white; border: none; padding: 0.6rem; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
-    .btn-grey { background: #333; color: #ccc; border: 1px solid #555; padding: 0.4rem; border-radius: 5px; cursor: pointer; font-size: 0.8rem; width: 100%; margin-top: 0.5rem;}
+    .input-group input { background: #111; color: #fff; border: 1px solid #555; padding: 0.6rem; border-radius: 6px; width: 100%; box-sizing: border-box; }
+    .btn-pink { background: var(--accent-pink); color: white; border: none; padding: 0.6rem; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
+    .btn-pink:hover { background: #c2185b; }
+    .btn-grey { background: #333; color: #ccc; border: 1px solid #555; padding: 0.4rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; width: 100%; margin-top: 0.5rem; }
     
+    /* Schalter */
+    .toggle-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; }
+    .toggle-grid label { background: #222; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; border: 1px solid #444; }
+    .toggle-grid input { margin: 0; }
+
+    /* Ba Gang Grid */
     .bagang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem; }
-    .bagang-btn { background: #252540; color: #fff; border: 1px solid #444; padding: 0.6rem; border-radius: 5px; cursor: pointer; font-size: 0.9rem; text-align: center; transition: 0.2s; }
+    .bagang-btn { background: #252540; color: #fff; border: 1px solid #444; padding: 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; text-align: center; transition: 0.2s; }
     .bagang-btn:hover { background: #333355; }
     .bagang-btn.active { background: #4a148c; border-color: #9c27b0; }
-    .bagang-result { background: #1f1f35; padding: 1rem; border-radius: 8px; border-left: 4px solid #9c27b0; display: none; margin-bottom: 1.5rem; }
+    .bagang-result { background: #2a1a35; padding: 1rem; border-radius: 6px; border-left: 4px solid #9c27b0; display: none; margin-top: 1rem; font-size: 0.9rem; }
   </style>
 </head>
 <body>
-  <h1>Zeitmesser</h1>
-  <p id="locationDisplay" style="color: #888;">Mellingen, CH · 47.42°N, 8.27°E</p>
 
-  <div class="time-travel-box">
-    <div style="color: #e91e63; font-weight: bold; margin-bottom: 0.8rem;">⏳ Zeitreise (Geburt / Termin)</div>
+  <h1>Zeitmesser</h1>
+  <div id="locationDisplay" class="location-text">Mellingen, CH · 47.42°N, 8.27°E</div>
+
+  <!-- 1. ZEITREISE KARTE -->
+  <div class="card time-travel-box">
+    <div class="card-header" style="color: var(--accent-pink); border-bottom-color: #553;">⏳ Zeitreise (Geburt / Termin)</div>
     <div class="input-group">
       <input type="datetime-local" id="timeTravelInput">
       <input type="text" id="locationInput" placeholder="Ort (z.B. Baden, Schweiz)">
     </div>
     <button id="timeTravelBtn" class="btn-pink">Berechnen</button>
-    <button id="resetTimeBtn" class="btn-grey">Zurück zum Jetzt (Mellingen)</button>
-    <div id="statusText" style="font-size: 0.8rem; color: #aaa; margin-top: 0.5rem;"></div>
+    <button id="resetTimeBtn" class="btn-grey">Zurück zum Jetzt</button>
+    <div id="statusText" style="font-size: 0.8rem; color: #aaa; margin-top: 0.5rem; text-align: center;"></div>
   </div>
 
-  <div style="text-align: center; margin: 1.5rem 0;">
-    <div id="liveClock" style="font-size: 3rem; font-weight: 300; font-variant-numeric: tabular-nums;">--:--:--</div>
-    <div id="liveDate" style="color: #aaa; font-size: 1.1rem; margin-top: 0.3rem;">Lade Datum...</div>
+  <!-- 2. LIVE UHR KARTE -->
+  <div class="card" style="text-align: center;">
+    <div id="liveClock" style="font-size: 3rem; font-weight: 300; font-variant-numeric: tabular-nums; color: #fff;">--:--:--</div>
+    <div id="liveDate" style="color: var(--text-muted); font-size: 1rem; margin-top: 0.3rem; margin-bottom: 1rem;">Lade Datum...</div>
+    <button id="gpsBtn" style="background: #333; color: #fff; border: 1px solid #555; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.9rem;">📍 Aktuellen Standort verwenden</button>
   </div>
 
-  <div style="text-align: center; margin-bottom: 1.5rem;">
-    <button id="gpsBtn" style="background: #333; color: #fff; border: 1px solid #555; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">📍 Aktuellen Standort verwenden</button>
+  <!-- SCHALTER -->
+  <div class="toggle-grid">
+    <label><input type="checkbox" id="tcmToggle" checked style="accent-color: var(--accent-gold);"> TCM</label>
+    <label><input type="checkbox" id="moonToggle" checked style="accent-color: #ccc;"> Mond</label>
+    <label><input type="checkbox" id="siderealToggle" checked style="accent-color: var(--accent-blue);"> Sternzeit</label>
+    <label><input type="checkbox" id="farmerToggle" checked style="accent-color: var(--accent-green);"> Natur</label>
+    <label><input type="checkbox" id="ganzhiToggle" checked style="accent-color: var(--accent-pink);"> Chinesisch</label>
+    <label><input type="checkbox" id="baGangToggle" checked style="accent-color: #9c27b0;"> Diagnostik</label>
   </div>
 
-  <div style="background: #1f1f35; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 0.8rem; justify-content: center; border: 1px solid #333;">
-    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="tcmToggle" checked style="accent-color: #ffaa00;"> <span>TCM</span></label>
-    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="moonToggle" checked style="accent-color: #ccc;"> <span>Mond</span></label>
-    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="siderealToggle" checked style="accent-color: #ffaa00;"> <span>Sternzeit</span></label>
-    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="farmerToggle" checked style="accent-color: #4caf50;"> <span>Bauernkalender</span></label>
-    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="planetToggle" checked style="accent-color: #00bcd4;"> <span>Planeten</span></label>
-    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="ganzhiToggle" checked style="accent-color: #e91e63;"> <span>Gan-Zhi & Akupunktur</span></label>
-    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="wuXingToggle" checked style="accent-color: #ff9800;"> <span>Wu Xing (Elemente)</span></label>
-    <label style="cursor: pointer; display: flex; align-items: center; gap: 0.3rem;"><input type="checkbox" id="baGangToggle" checked style="accent-color: #9c27b0;"> <span>Ba Gang (Diagnostik)</span></label>
+  <!-- 3. NATUR & KOSMOS KARTE -->
+  <div class="card">
+    <div class="card-header nature">🌿 Natur & Kosmos</div>
+    <div class="row"><span class="label">Sonnenaufgang</span><span class="value" id="sunrise">–</span></div>
+    <div class="row"><span class="label">Sonnenhöchststand</span><span class="value" id="solarNoon">–</span></div>
+    <div class="row"><span class="label">Sonnenuntergang</span><span class="value" id="sunset">–</span></div>
+    <div class="row"><span class="label">Tageslänge</span><span class="value" id="dayLength">–</span></div>
+    
+    <div id="moonData">
+      <div class="row"><span class="label">Mondphase</span><span class="value" id="moonPhase">–</span></div>
+      <div class="row"><span class="label">Mondaufgang</span><span class="value" id="moonrise">–</span></div>
+      <div class="row"><span class="label">Monduntergang</span><span class="value" id="moonset">–</span></div>
+    </div>
+
+    <div id="farmerData">
+      <div class="row"><span class="label">Mondpflanzentag</span><span class="value" id="farmerDay" style="color: var(--accent-green); font-weight: bold;">–</span></div>
+    </div>
+
+    <div id="siderealData">
+      <div class="row"><span class="label">Lokale Sternzeit</span><span class="value" id="siderealTime" style="color: var(--accent-blue);">–</span></div>
+    </div>
+
+    <div id="planetData">
+      <div class="row"><span class="label">Jupiter</span><span class="value" id="planetJupiter">–</span></div>
+      <div class="row"><span class="label">Saturn</span><span class="value" id="planetSaturn">–</span></div>
+      <div class="row"><span class="label">Mars</span><span class="value" id="planetMars">–</span></div>
+      <div class="row"><span class="label">Venus</span><span class="value" id="planetVenus">–</span></div>
+    </div>
   </div>
 
-  <div id="tcmBox" style="background: #252540; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1.5rem; border-left: 4px solid #ffaa00;">
-    <div style="color: #aaa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Aktuelle TCM-Organzeit</div>
-    <div id="tcmOrgan" style="font-size: 1.5rem; font-weight: bold; color: #ffaa00; margin-top: 0.3rem;">Berechne...</div>
-    <div style="color: #aaa; font-size: 0.8rem; margin-top: 0.5rem;">Wahre Sonnenzeit: <span id="trueSolarTime" style="color: #ffaa00;">–</span></div>
+  <!-- 4. TCM & AKUPUNKTUR KARTE -->
+  <div class="card">
+    <div class="card-header tcm">☯️ TCM & Akupunktur</div>
+    
+    <div id="tcmBox" style="background: #252540; padding: 1rem; border-radius: 8px; text-align: center; margin-bottom: 1rem;">
+      <div style="color: #aaa; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Aktuelle TCM-Organzeit</div>
+      <div id="tcmOrgan" style="font-size: 1.4rem; font-weight: bold; color: var(--accent-gold); margin-top: 0.2rem;">Berechne...</div>
+      <div style="color: #aaa; font-size: 0.8rem; margin-top: 0.3rem;">Wahre Sonnenzeit: <span id="trueSolarTime" style="color: var(--accent-gold);">–</span></div>
+    </div>
+
+    <div id="wuXingData">
+      <div class="row"><span class="label">Aktives Element (Stunde)</span><span class="value" id="currentElement" style="color: var(--accent-gold); font-weight: bold;">–</span></div>
+      <div class="row"><span class="label">Jahreszeit (TCM)</span><span class="value" id="tcmSeason" style="color: var(--accent-gold); font-weight: bold;">–</span></div>
+      <div class="row"><span class="label">Jahres-Element</span><span class="value" id="yearElement" style="color: var(--accent-gold); font-weight: bold;">–</span></div>
+    </div>
+
+    <div id="ganzhiData" style="margin-top: 1rem; border-top: 1px solid #333; padding-top: 1rem;">
+      <div class="row"><span class="label">Chinesisches Jahr</span><span class="value" id="chineseYear" style="color: var(--accent-pink); font-weight: bold;">–</span></div>
+      <div class="row"><span class="label">Tages-Gan-Zhi</span><span class="value" id="dayGanZhi" style="color: var(--accent-pink); font-weight: bold;">–</span></div>
+      <div class="row"><span class="label">Stunden-Gan-Zhi</span><span class="value" id="hourGanZhi" style="color: var(--accent-pink); font-weight: bold;">–</span></div>
+      
+      <div class="row" style="background: #2a1a2a; padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem;">
+        <span class="label" style="color: var(--accent-pink);">Punkt des Tages</span>
+        <span class="value" id="dailyPoint" style="color: var(--accent-blue); font-weight: bold;">–</span>
+      </div>
+      <div class="row" style="background: #1a3a3a; padding: 0.5rem; border-radius: 4px; margin-top: 0.3rem;">
+        <span class="label" style="color: var(--accent-blue);">Zi Wu Liu Zhu</span>
+        <span class="value" id="ziWuPoint" style="color: var(--accent-blue); font-weight: bold;">–</span>
+      </div>
+      <div class="row" style="margin-top: 0.3rem;">
+        <span class="label">Geöffneter Punkt (Na Zi)</span>
+        <span class="value" id="acupoint" style="color: var(--accent-blue); font-weight: bold;">–</span>
+      </div>
+    </div>
+
+    <div id="baZiData" style="background: #2a2a1a; padding: 1rem; border-radius: 6px; margin-top: 1rem; border: 1px solid var(--accent-gold); display: none;">
+      <div style="color: var(--accent-gold); font-weight: bold; margin-bottom: 0.5rem; text-align: center; font-size: 0.9rem;">Ba Zi (Vier Säulen)</div>
+      <div class="row"><span class="label">Jahr</span><span class="value" id="bzYear" style="color: var(--accent-gold);">–</span></div>
+      <div class="row"><span class="label">Monat</span><span class="value" id="bzMonth" style="color: var(--accent-gold);">–</span></div>
+      <div class="row"><span class="label">Tag</span><span class="value" id="bzDay" style="color: var(--accent-gold);">–</span></div>
+      <div class="row"><span class="label">Stunde</span><span class="value" id="bzHour" style="color: var(--accent-gold);">–</span></div>
+    </div>
   </div>
 
-  <div id="baGangData">
-    <div style="text-align: center; color: #9c27b0; font-weight: bold; margin-bottom: 0.5rem;">Die Acht Leitkriterien (Ba Gang)</div>
+  <!-- 5. DIAGNOSTIK KARTE -->
+  <div class="card" id="baGangData">
+    <div class="card-header baGang">⚖️ Diagnostik (Ba Gang)</div>
     <div class="bagang-grid">
       <button class="bagang-btn" data-key="yin">Yin (Leere/Kälte)</button>
       <button class="bagang-btn" data-key="yang">Yang (Fülle/Hitze)</button>
@@ -79,73 +176,14 @@
       <button class="bagang-btn" data-key="fuelle">Fülle (Überschuss)</button>
     </div>
     <div id="bagangResultBox" class="bagang-result">
-      <div id="bagangTitle" style="font-weight: bold; color: #9c27b0; margin-bottom: 0.5rem;">–</div>
-      <div id="bagangStrategy" style="font-size: 0.9rem; line-height: 1.4;">–</div>
+      <div id="bagangTitle" style="font-weight: bold; color: #ce93d8; margin-bottom: 0.5rem;">–</div>
+      <div id="bagangStrategy" style="line-height: 1.4;">–</div>
     </div>
-  </div>
-
-  <div id="wuXingData">
-    <div class="row"><span class="label">Aktives Element (Stunde)</span><span class="value" id="currentElement" style="color: #ff9800; font-weight: bold;">–</span></div>
-    <div class="row"><span class="label">Jahreszeit (TCM)</span><span class="value" id="tcmSeason" style="color: #ff9800; font-weight: bold;">–</span></div>
-    <div class="row"><span class="label">Jahres-Element (Gan-Zhi)</span><span class="value" id="yearElement" style="color: #ff9800; font-weight: bold;">–</span></div>
-  </div>
-
-  <div class="row"><span class="label">Sonnenaufgang</span><span class="value" id="sunrise">–</span></div>
-  <div class="row"><span class="label">Sonnenhöchststand</span><span class="value" id="solarNoon">–</span></div>
-  <div class="row"><span class="label">Sonnenuntergang</span><span class="value" id="sunset">–</span></div>
-  <div class="row"><span class="label">Tageslänge</span><span class="value" id="dayLength">–</span></div>
-  
-  <div id="moonData">
-    <div class="row"><span class="label">Mondphase</span><span class="value" id="moonPhase">–</span></div>
-    <div class="row"><span class="label">Mondaufgang</span><span class="value" id="moonrise">–</span></div>
-    <div class="row"><span class="label">Monduntergang</span><span class="value" id="moonset">–</span></div>
-  </div>
-
-  <div id="siderealData">
-    <div class="row"><span class="label">Lokale Sternzeit</span><span class="value" id="siderealTime">–</span></div>
-  </div>
-
-  <div id="farmerData">
-    <div class="row"><span class="label">Mondpflanzentag</span><span class="value" id="farmerDay" style="color: #4caf50; font-weight: bold;">–</span></div>
-  </div>
-
-  <div id="planetData">
-    <div class="row"><span class="label">Jupiter</span><span class="value" id="planetJupiter">–</span></div>
-    <div class="row"><span class="label">Saturn</span><span class="value" id="planetSaturn">–</span></div>
-    <div class="row"><span class="label">Mars</span><span class="value" id="planetMars">–</span></div>
-    <div class="row"><span class="label">Venus</span><span class="value" id="planetVenus">–</span></div>
-  </div>
-
-  <div id="ganzhiData">
-    <div class="row"><span class="label">Chinesisches Jahr</span><span class="value" id="chineseYear" style="color: #e91e63; font-weight: bold;">–</span></div>
-    <div class="row"><span class="label">Tages-Gan-Zhi</span><span class="value" id="dayGanZhi" style="color: #e91e63; font-weight: bold;">–</span></div>
-    <div class="row"><span class="label">Stunden-Gan-Zhi</span><span class="value" id="hourGanZhi" style="color: #e91e63; font-weight: bold;">–</span></div>
-    
-    <div class="row" style="background: #2a1a2a; padding-left: 0.5rem; padding-right: 0.5rem; margin-top: 0.5rem; border-left: 3px solid #e91e63;">
-      <span class="label" style="color: #e91e63;">Punkt des Tages (Stamm)</span>
-      <span class="value" id="dailyPoint" style="color: #03a9f4; font-weight: bold;">–</span>
-    </div>
-
-    <div class="row"><span class="label">Geöffneter Punkt (Na Zi)</span><span class="value" id="acupoint" style="color: #03a9f4; font-weight: bold;">–</span></div>
-
-    <div class="row" style="background: #1a3a3a; padding-left: 0.5rem; padding-right: 0.5rem; margin-top: 0.5rem; border-left: 3px solid #00bcd4;">
-      <span class="label" style="color: #00bcd4;">Zi Wu Liu Zhu (Na Zi)</span>
-      <span class="value" id="ziWuPoint" style="color: #00e5ff; font-weight: bold;">–</span>
-    </div>
-  </div>
-
-  <div id="baZiData" style="background: #1f1f35; padding: 1rem; border-radius: 8px; margin-top: 1rem; border: 1px solid #ff9800; display: none;">
-    <div style="color: #ff9800; font-weight: bold; margin-bottom: 0.5rem; text-align: center;">Ba Zi (Vier Säulen des Schicksals)</div>
-    <div class="row"><span class="label">Säule des Jahres</span><span class="value" id="bzYear" style="color: #ff9800;">–</span></div>
-    <div class="row"><span class="label">Säule des Monats</span><span class="value" id="bzMonth" style="color: #ff9800;">–</span></div>
-    <div class="row"><span class="label">Säule des Tages</span><span class="value" id="bzDay" style="color: #ff9800;">–</span></div>
-    <div class="row"><span class="label">Säule der Stunde</span><span class="value" id="bzHour" style="color: #ff9800;">–</span></div>
   </div>
 
   <script>
     let lat = 47.42, lng = 8.27;
     let locationName = "Mellingen, CH";
-    
     let targetDate = new Date(); 
     let isTimeTravel = false;
 
@@ -184,14 +222,12 @@
       document.getElementById('liveClock').textContent = now.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Zurich' });
       document.getElementById('liveDate').textContent = now.toLocaleDateString('de-CH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Europe/Zurich' });
 
-      // Wahre Sonnenzeit
       const times = SunCalc.getTimes(now, lat, lng);
       const solarNoon = times.solarNoon;
       const trueSolarTime = new Date(now.getTime() + (12 * 60 * 60 * 1000) - (solarNoon.getHours() * 60 * 60 * 1000 + solarNoon.getMinutes() * 60 * 1000));
       const trueHour = parseInt(trueSolarTime.toLocaleTimeString('de-CH', { hour: '2-digit', hour12: false }));
       document.getElementById('trueSolarTime').textContent = trueSolarTime.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich' });
 
-      // TCM Organuhr
       const organs = [
         { start: 23, name: "Gallenblase (GB)", element: "Holz" }, { start: 1, name: "Leber (LE)", element: "Holz" }, 
         { start: 3, name: "Lunge (LU)", element: "Metall" }, { start: 5, name: "Dickdarm (DI)", element: "Metall" },
@@ -216,7 +252,6 @@
       document.getElementById('tcmOrgan').textContent = currentOrgan;
       document.getElementById('currentElement').textContent = currentElement;
 
-      // Jahreszeit nach TCM
       const month = now.getMonth() + 1;
       const day = now.getDate();
       let season = "Unbekannt";
@@ -227,7 +262,6 @@
       if ((month === 8 && day >= 23) || (month === 9 && day < 10)) season = "Spätsommer (Erde)"; 
       document.getElementById('tcmSeason').textContent = season;
 
-      // Sternzeit
       const jd = (now.getTime() / 86400000) + 2440587.5;
       const d = jd - 2451545.0;
       let gmst = 280.46061837 + 360.98564736629 * d;
@@ -237,14 +271,12 @@
       const h = Math.floor(totalSeconds / 3600); const m = Math.floor((totalSeconds % 3600) / 60); const s = Math.floor(totalSeconds % 60);
       document.getElementById('siderealTime').textContent = `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
 
-      // Bauernkalender
       let moonLon = 218.32 + 13.176396 * d + 6.29 * Math.sin((134.9 + 13.064993 * d) * Math.PI / 180);
       moonLon = moonLon % 360; if (moonLon < 0) moonLon += 360;
       const zodiacIndex = Math.floor(moonLon / 30);
       const plantDays = ["Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"];
       document.getElementById('farmerDay').textContent = plantDays[zodiacIndex];
 
-      // Planeten
       const planets = {
         'planetJupiter': { period: 11.86, offset: 0.5 },
         'planetSaturn': { period: 29.46, offset: 1.2 },
@@ -260,7 +292,6 @@
         document.getElementById(id).textContent = signs[signIndex];
       }
 
-      // Chinesischer Kalender & Ba Zi
       const stems = ["Jia (Holz)", "Yi (Holz)", "Bing (Feuer)", "Ding (Feuer)", "Wu (Erde)", "Ji (Erde)", "Geng (Metall)", "Xin (Metall)", "Ren (Wasser)", "Gui (Wasser)"];
       const branches = ["Zi (Ratte)", "Chou (Ochse)", "Yin (Tiger)", "Mao (Hase)", "Chen (Drache)", "Si (Schlange)", "Wu (Pferd)", "Wei (Ziege)", "Shen (Affe)", "You (Hahn)", "Xu (Hund)", "Hai (Schwein)"];
       
@@ -273,10 +304,8 @@
         chineseYear = currentYear - 1;
       }
       
-      // SICHERHEITSABFRAGE FÜR DAS JAHR
       let yearStemIndex = (chineseYear - 1984) % 10;
       if (yearStemIndex < 0) yearStemIndex += 10;
-      
       let yearBranchIndex = (chineseYear - 1984) % 12;
       if (yearBranchIndex < 0) yearBranchIndex += 12;
 
@@ -301,21 +330,18 @@
       const hourStemIndex = (hourStemBase + hourBranchIndex) % 10;
       document.getElementById('hourGanZhi').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
 
-      // Punkt des Tages
       const dailyPoints = [
         "Jing-Well (Brunnen)", "Ying-Spring (Quelle)", "Shu-Stream (Bach)", "Jing-River (Fluss)", "He-Sea (Meer)",
         "Jing-Well (Brunnen)", "Ying-Spring (Quelle)", "Shu-Stream (Bach)", "Jing-River (Fluss)", "He-Sea (Meer)"
       ];
       document.getElementById('dailyPoint').textContent = dailyPoints[dayStemIndex];
 
-      // Akupunktur-Punkte
       const shuPoints = [
         "Jing-Well (Brunnenpunkt)", "Ying-Spring (Quellpunkt)", "Shu-Stream (Bachpunkt)", "Jing-River (Flusspunkt)", "He-Sea (Meerpunkt)"
       ];
       const pointIndex = hourBranchIndex % 5;
       document.getElementById('acupoint').textContent = shuPoints[pointIndex];
 
-      // Zi Wu Liu Zhu
       const ziWuMatrix = [
         ["Lu 11 (Shaoshang)", "Lu 10 (Yuji)", "Lu 9 (Taiyuan)", "Lu 8 (Jingqu)", "Lu 5 (Chize)"],
         ["Di 1 (Shangyang)", "Di 2 (Erjian)", "Di 3 (Sanjian)", "Di 5 (Yangxi)", "Di 11 (Quchi)"],
@@ -332,126 +358,18 @@
       const ziWuPoint = ziWuMatrix[dayStemIndex][ziWuHourIndex];
       document.getElementById('ziWuPoint').textContent = ziWuPoint;
 
-      // Ba Zi (Vier Säulen)
       if (isTimeTravel) {
         document.getElementById('baZiData').style.display = 'block';
         
         let bzYear = now.getFullYear();
         if (now.getMonth() === 0 || (now.getMonth() === 1 && now.getDate() < 4)) bzYear = bzYear - 1;
         
-        // SICHERHEITSABFRAGE FÜR DIE BA ZI SÄULE
         let bzYearStemIdx = (bzYear - 1984) % 10;
         if (bzYearStemIdx < 0) bzYearStemIdx += 10;
-        
         let bzYearBranchIdx = (bzYear - 1984) % 12;
         if (bzYearBranchIdx < 0) bzYearBranchIdx += 12;
         
         document.getElementById('bzYear').textContent = stems[bzYearStemIdx] + " / " + branches[bzYearBranchIdx];
 
         let monthBranchIndex = (month + 1) % 12; 
-        document.getElementById('bzMonth').textContent = stems[(bzYearStemIdx * 2 + month) % 10] + " / " + branches[monthBranchIndex];
-
-        document.getElementById('bzDay').textContent = stems[dayStemIndex] + " / " + branches[dayBranchIndex];
-
-        document.getElementById('bzHour').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
-      } else {
-        document.getElementById('baZiData').style.display = 'none';
-      }
-
-      if (isTimeTravel) {
-        calculateAndDisplay(now);
-      }
-    }
-
-    calculateAndDisplay(new Date());
-    updateClock();
-    setInterval(() => { if (!isTimeTravel) updateClock(); }, 1000);
-
-    // Zeitreise
-    document.getElementById('timeTravelBtn').addEventListener('click', () => {
-      const inputVal = document.getElementById('timeTravelInput').value;
-      const inputLocation = document.getElementById('locationInput').value;
-      const status = document.getElementById('statusText');
-
-      if (!inputVal) { alert("Bitte wähle ein Datum und eine Uhrzeit."); return; }
-
-      if (inputLocation.trim() !== "") {
-        status.textContent = "Suche Ort...";
-        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(inputLocation)}`)
-          .then(response => response.json())
-          .then(data => {
-            if (data && data.length > 0) {
-              lat = parseFloat(data[0].lat); lng = parseFloat(data[0].lon);
-              locationName = data[0].display_name.split(',')[0]; 
-              status.textContent = `Ort gefunden: ${locationName}`;
-              targetDate = new Date(inputVal); isTimeTravel = true; updateClock();
-            } else {
-              status.textContent = "Ort nicht gefunden. Nutze Mellingen.";
-              targetDate = new Date(inputVal); isTimeTravel = true; updateClock();
-            }
-          })
-          .catch(err => { status.textContent = "Fehler bei der Ortssuche."; console.error(err); });
-      } else {
-        lat = 47.42; lng = 8.27; locationName = "Mellingen, CH";
-        targetDate = new Date(inputVal); isTimeTravel = true; updateClock();
-      }
-    });
-
-    document.getElementById('resetTimeBtn').addEventListener('click', () => {
-      isTimeTravel = false; targetDate = new Date(); lat = 47.42; lng = 8.27; locationName = "Mellingen, CH";
-      document.getElementById('timeTravelInput').value = ""; document.getElementById('locationInput').value = "";
-      document.getElementById('statusText').textContent = "";
-      calculateAndDisplay(new Date()); updateClock();
-    });
-
-    // GPS
-    document.getElementById('gpsBtn').addEventListener('click', () => {
-      if (navigator.geolocation) {
-        document.getElementById('gpsBtn').textContent = "📍 Suche Standort...";
-        navigator.geolocation.getCurrentPosition((position) => {
-            lat = position.coords.latitude; lng = position.coords.longitude; locationName = "Aktueller Standort";
-            isTimeTravel = false; targetDate = new Date();
-            document.getElementById('timeTravelInput').value = ""; document.getElementById('locationInput').value = "";
-            document.getElementById('statusText').textContent = "GPS-Standort übernommen.";
-            document.getElementById('gpsBtn').textContent = "📍 Standort aktualisiert!";
-            calculateAndDisplay(new Date()); updateClock();
-          }, (error) => {
-            document.getElementById('gpsBtn').textContent = "📍 Standort verweigert";
-          });
-      }
-    });
-
-    // Schalter
-    ['tcm', 'moon', 'sidereal', 'farmer', 'planet', 'ganzhi', 'wuXing', 'baGang'].forEach(type => {
-      document.getElementById(type + 'Toggle').addEventListener('change', (event) => {
-        const box = document.getElementById(type === 'tcm' ? 'tcmBox' : type + 'Data');
-        if (box) box.style.display = event.target.checked ? 'block' : 'none';
-      });
-    });
-
-    // Ba Gang Logik
-    const baGangData = {
-      yin: { title: "Yin", text: "Zeichen von Kälte, Leere und chronischen Zuständen. Behandlung: Wärmen, Tonisieren (z.B. Ren 4, Niere 3)." },
-      yang: { title: "Yang", text: "Zeichen von Hitze, Fülle und akuten Zuständen. Behandlung: Kühlen, Sedieren (z.B. Di 11, Du 14)." },
-      innen: { title: "Innen", text: "Die Krankheit sitzt in den Zang-Fu Organen. Behandlung: Die inneren Organe regulieren (z.B. über Mu- oder Shu-Punkte)." },
-      aussen: { title: "Außen", text: "Die Krankheit sitzt in Haut, Muskeln und Meridianen (z.B. Wind-Kälte). Behandlung: Schwitzen lassen, Äußeres lösen (z.B. Di 4, Lu 7)." },
-      kaelte: { title: "Kälte", text: "Zeichen: Frösteln, kalte Gliedmaßen, blasses Gesicht. Behandlung: Wärmen (Moxa), Kälte vertreiben (z.B. Ren 8, Ma 36)." },
-      hitze: { title: "Hitze", text: "Zeichen: Rotes Gesicht, Durst, Fieber. Behandlung: Hitze klären (z.B. Di 11, Du 14, Ma 44)." },
-      leere: { title: "Leere (Mangel)", text: "Zeichen: Erschöpfung, Schwäche, chronischer Verlauf. Behandlung: Tonisieren (Stärken) der betroffenen Organe (z.B. Ma 36, Ren 6)." },
-      fuelle: { title: "Fülle (Überschuss)", text: "Zeichen: Starke Schmerzen, Druck, akuter Verlauf. Behandlung: Sedieren (Ableiten) der pathogenen Faktoren (z.B. Lu 5, Ma 44)." }
-    };
-
-    document.querySelectorAll('.bagang-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.bagang-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const key = btn.getAttribute('data-key');
-        const data = baGangData[key];
-        document.getElementById('bagangTitle').textContent = data.title;
-        document.getElementById('bagangStrategy').textContent = data.text;
-        document.getElementById('bagangResultBox').style.display = 'block';
-      });
-    });
-  </script>
-</body>
-</html>
+        document.getElementById('bzMonth').textContent = stems[(bzYearStemIdx * 2 + month
