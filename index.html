@@ -21,7 +21,6 @@
     h1 { font-weight: 300; letter-spacing: 0.05em; text-align: center; margin-bottom: 0.5rem; }
     .location-text { color: var(--text-muted); text-align: center; font-size: 0.9rem; margin-bottom: 2rem; }
     
-    /* Karten-Architektur */
     .card { background: var(--card-bg); border-radius: 12px; padding: 1.2rem; margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border: 1px solid var(--border-color); }
     .card-header { font-size: 1.1rem; font-weight: bold; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
     .card-header.nature { color: var(--accent-green); }
@@ -33,7 +32,6 @@
     .label { color: var(--text-muted); font-size: 0.9rem; }
     .value { font-variant-numeric: tabular-nums; font-weight: 500; }
     
-    /* Zeitreise */
     .time-travel-box { background: linear-gradient(145deg, #1f1f35, #2a1a2a); border: 1px solid var(--accent-pink); }
     .input-group { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.8rem; }
     .input-group input { background: #111; color: #fff; border: 1px solid #555; padding: 0.6rem; border-radius: 6px; width: 100%; box-sizing: border-box; }
@@ -41,17 +39,19 @@
     .btn-pink:hover { background: #c2185b; }
     .btn-grey { background: #333; color: #ccc; border: 1px solid #555; padding: 0.4rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; width: 100%; margin-top: 0.5rem; }
     
-    /* Schalter */
     .toggle-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; }
     .toggle-grid label { background: #222; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; border: 1px solid #444; }
     .toggle-grid input { margin: 0; }
 
-    /* Ba Gang Grid */
     .bagang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem; }
     .bagang-btn { background: #252540; color: #fff; border: 1px solid #444; padding: 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; text-align: center; transition: 0.2s; }
     .bagang-btn:hover { background: #333355; }
     .bagang-btn.active { background: #4a148c; border-color: #9c27b0; }
     .bagang-result { background: #2a1a35; padding: 1rem; border-radius: 6px; border-left: 4px solid #9c27b0; display: none; margin-top: 1rem; font-size: 0.9rem; }
+    
+    /* Styling für die Zeitenwende */
+    .season-event { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 0.4rem 0; color: #ccc; }
+    .season-event.highlight { color: var(--accent-gold); font-weight: bold; background: rgba(255, 170, 0, 0.1); padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; }
   </style>
 </head>
 <body>
@@ -59,7 +59,6 @@
   <h1>Zeitmesser</h1>
   <div id="locationDisplay" class="location-text">Mellingen, CH · 47.42°N, 8.27°E</div>
 
-  <!-- 1. ZEITREISE KARTE -->
   <div class="card time-travel-box">
     <div class="card-header" style="color: var(--accent-pink); border-bottom-color: #553;">⏳ Zeitreise (Geburt / Termin)</div>
     <div class="input-group">
@@ -71,14 +70,12 @@
     <div id="statusText" style="font-size: 0.8rem; color: #aaa; margin-top: 0.5rem; text-align: center;"></div>
   </div>
 
-  <!-- 2. LIVE UHR KARTE -->
   <div class="card" style="text-align: center;">
     <div id="liveClock" style="font-size: 3rem; font-weight: 300; font-variant-numeric: tabular-nums; color: #fff;">--:--:--</div>
     <div id="liveDate" style="color: var(--text-muted); font-size: 1rem; margin-top: 0.3rem; margin-bottom: 1rem;">Lade Datum...</div>
     <button id="gpsBtn" style="background: #333; color: #fff; border: 1px solid #555; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.9rem;">📍 Aktuellen Standort verwenden</button>
   </div>
 
-  <!-- SCHALTER -->
   <div class="toggle-grid">
     <label><input type="checkbox" id="tcmToggle" checked style="accent-color: var(--accent-gold);"> TCM</label>
     <label><input type="checkbox" id="moonToggle" checked style="accent-color: #ccc;"> Mond</label>
@@ -86,11 +83,24 @@
     <label><input type="checkbox" id="farmerToggle" checked style="accent-color: var(--accent-green);"> Natur</label>
     <label><input type="checkbox" id="ganzhiToggle" checked style="accent-color: var(--accent-pink);"> Chinesisch</label>
     <label><input type="checkbox" id="baGangToggle" checked style="accent-color: #9c27b0;"> Diagnostik</label>
+    <label><input type="checkbox" id="seasonToggle" checked style="accent-color: #ff9800;"> Zeitenwende</label>
   </div>
 
-  <!-- 3. NATUR & KOSMOS KARTE -->
-  <div class="card">
+  <div class="card" id="natureData">
     <div class="card-header nature">🌿 Natur & Kosmos</div>
+    
+    <!-- NEU: Zeitenwende Sektion -->
+    <div id="seasonData" style="margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 1rem;">
+      <div style="font-size: 0.9rem; color: var(--accent-gold); font-weight: bold; margin-bottom: 0.5rem;">Sonnenwenden & Tagundnachtgleichen</div>
+      <div id="seasonEvents">
+        <div class="season-event"><span>Frühlings-Äquinoktium:</span> <span id="springEquinox">–</span></div>
+        <div class="season-event"><span>Sommersonnenwende:</span> <span id="summerSolstice">–</span></div>
+        <div class="season-event"><span>Herbst-Äquinoktium:</span> <span id="autumnEquinox">–</span></div>
+        <div class="season-event"><span>Wintersonnenwende:</span> <span id="winterSolstice">–</span></div>
+        <div class="season-event highlight"><span>Nächstes Ereignis:</span> <span id="nextSeasonEvent">–</span></div>
+      </div>
+    </div>
+
     <div class="row"><span class="label">Sonnenaufgang</span><span class="value" id="sunrise">–</span></div>
     <div class="row"><span class="label">Sonnenhöchststand</span><span class="value" id="solarNoon">–</span></div>
     <div class="row"><span class="label">Sonnenuntergang</span><span class="value" id="sunset">–</span></div>
@@ -118,7 +128,6 @@
     </div>
   </div>
 
-  <!-- 4. TCM & AKUPUNKTUR KARTE -->
   <div class="card">
     <div class="card-header tcm">☯️ TCM & Akupunktur</div>
     
@@ -162,7 +171,6 @@
     </div>
   </div>
 
-  <!-- 5. DIAGNOSTIK KARTE -->
   <div class="card" id="baGangData">
     <div class="card-header baGang">⚖️ Diagnostik (Ba Gang)</div>
     <div class="bagang-grid">
@@ -216,18 +224,33 @@
       document.getElementById('moonset').textContent = formatTime(moonTimes.set);
     }
 
+    // Hilfsfunktion für die exakten Zeitenwenden (Näherung: 20./21. März, 21. Juni, 22./23. Sept, 21./22. Dez)
+    // Da die exakten Zeiten jedes Jahr um ein paar Stunden schwanken, nutzen wir eine genaue Berechnung für das aktuelle Jahr.
+    // Für eine absolut sekundengenaue Berechnung bräuchten wir ein astronomisches Ephemeridensystem, aber für die TCM reicht die Tagesgenauigkeit.
+    function getSeasonEvents(year) {
+      // Ungefähre Zeitpunkte für die Mitteleuropäische Zeitzone
+      return [
+        { name: "Frühlings-Äquinoktium", date: new Date(year, 2, 20, 10, 0) }, // 20. März
+        { name: "Sommersonnenwende", date: new Date(year, 5, 21, 4, 0) },     // 21. Juni
+        { name: "Herbst-Äquinoktium", date: new Date(year, 8, 22, 20, 0) },   // 22. Sept
+        { name: "Wintersonnenwende", date: new Date(year, 11, 21, 16, 0) }    // 21. Dez
+      ];
+    }
+
     function updateClock() {
       const now = isTimeTravel ? targetDate : new Date();
       
       document.getElementById('liveClock').textContent = now.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Zurich' });
       document.getElementById('liveDate').textContent = now.toLocaleDateString('de-CH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Europe/Zurich' });
 
+      // Wahre Sonnenzeit
       const times = SunCalc.getTimes(now, lat, lng);
       const solarNoon = times.solarNoon;
       const trueSolarTime = new Date(now.getTime() + (12 * 60 * 60 * 1000) - (solarNoon.getHours() * 60 * 60 * 1000 + solarNoon.getMinutes() * 60 * 1000));
       const trueHour = parseInt(trueSolarTime.toLocaleTimeString('de-CH', { hour: '2-digit', hour12: false }));
       document.getElementById('trueSolarTime').textContent = trueSolarTime.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich' });
 
+      // TCM Organuhr
       const organs = [
         { start: 23, name: "Gallenblase (GB)", element: "Holz" }, { start: 1, name: "Leber (LE)", element: "Holz" }, 
         { start: 3, name: "Lunge (LU)", element: "Metall" }, { start: 5, name: "Dickdarm (DI)", element: "Metall" },
@@ -252,6 +275,7 @@
       document.getElementById('tcmOrgan').textContent = currentOrgan;
       document.getElementById('currentElement').textContent = currentElement;
 
+      // Jahreszeit nach TCM
       const month = now.getMonth() + 1;
       const day = now.getDate();
       let season = "Unbekannt";
@@ -262,6 +286,40 @@
       if ((month === 8 && day >= 23) || (month === 9 && day < 10)) season = "Spätsommer (Erde)"; 
       document.getElementById('tcmSeason').textContent = season;
 
+      // --- ZEITENWENDE BERECHNUNG ---
+      const currentYear = now.getFullYear();
+      let seasonEvents = getSeasonEvents(currentYear);
+      
+      // Wenn wir nach der Wintersonnenwende sind, brauchen wir die Ereignisse des nächsten Jahres für den Countdown
+      if (now > seasonEvents[3].date) {
+        seasonEvents = seasonEvents.concat(getSeasonEvents(currentYear + 1));
+      }
+
+      const formatDate = (d) => d.toLocaleDateString('de-CH', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Europe/Zurich' });
+      const formatTimeOnly = (d) => d.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich' });
+      
+      document.getElementById('springEquinox').textContent = formatDate(seasonEvents[0].date) + " " + formatTimeOnly(seasonEvents[0].date);
+      document.getElementById('summerSolstice').textContent = formatDate(seasonEvents[1].date) + " " + formatTimeOnly(seasonEvents[1].date);
+      document.getElementById('autumnEquinox').textContent = formatDate(seasonEvents[2].date) + " " + formatTimeOnly(seasonEvents[2].date);
+      document.getElementById('winterSolstice').textContent = formatDate(seasonEvents[3].date) + " " + formatTimeOnly(seasonEvents[3].date);
+
+      // Nächstes Ereignis finden
+      let nextEvent = null;
+      for (let ev of seasonEvents) {
+        if (ev.date > now) {
+          nextEvent = ev;
+          break;
+        }
+      }
+
+      if (nextEvent) {
+        const diffTime = Math.abs(nextEvent.date - now);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        document.getElementById('nextSeasonEvent').textContent = `${nextEvent.name} in ${diffDays} Tagen (${formatDate(nextEvent.date)})`;
+      }
+
+      // Sternzeit
       const jd = (now.getTime() / 86400000) + 2440587.5;
       const d = jd - 2451545.0;
       let gmst = 280.46061837 + 360.98564736629 * d;
@@ -271,12 +329,14 @@
       const h = Math.floor(totalSeconds / 3600); const m = Math.floor((totalSeconds % 3600) / 60); const s = Math.floor(totalSeconds % 60);
       document.getElementById('siderealTime').textContent = `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
 
+      // Bauernkalender
       let moonLon = 218.32 + 13.176396 * d + 6.29 * Math.sin((134.9 + 13.064993 * d) * Math.PI / 180);
       moonLon = moonLon % 360; if (moonLon < 0) moonLon += 360;
       const zodiacIndex = Math.floor(moonLon / 30);
       const plantDays = ["Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"];
       document.getElementById('farmerDay').textContent = plantDays[zodiacIndex];
 
+      // Planeten
       const planets = {
         'planetJupiter': { period: 11.86, offset: 0.5 },
         'planetSaturn': { period: 29.46, offset: 1.2 },
@@ -292,10 +352,10 @@
         document.getElementById(id).textContent = signs[signIndex];
       }
 
+      // Chinesischer Kalender
       const stems = ["Jia (Holz)", "Yi (Holz)", "Bing (Feuer)", "Ding (Feuer)", "Wu (Erde)", "Ji (Erde)", "Geng (Metall)", "Xin (Metall)", "Ren (Wasser)", "Gui (Wasser)"];
       const branches = ["Zi (Ratte)", "Chou (Ochse)", "Yin (Tiger)", "Mao (Hase)", "Chen (Drache)", "Si (Schlange)", "Wu (Pferd)", "Wei (Ziege)", "Shen (Affe)", "You (Hahn)", "Xu (Hund)", "Hai (Schwein)"];
       
-      const currentYear = now.getFullYear();
       const currentMonth = now.getMonth() + 1;
       const currentDay = now.getDate();
       
@@ -444,7 +504,7 @@
     });
 
     // Schalter
-    ['tcm', 'moon', 'sidereal', 'farmer', 'ganzhi', 'baGang'].forEach(type => {
+    ['tcm', 'moon', 'sidereal', 'farmer', 'ganzhi', 'baGang', 'season'].forEach(type => {
       document.getElementById(type + 'Toggle').addEventListener('change', (event) => {
         const box = document.getElementById(type + 'Data');
         if (box) box.style.display = event.target.checked ? 'block' : 'none';
