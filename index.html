@@ -25,7 +25,6 @@
     .card-header { font-size: 1.1rem; font-weight: bold; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; }
     .card-header.nature { color: var(--accent-green); }
     .card-header.tcm { color: var(--accent-gold); }
-    .card-header.baGang { color: #9c27b0; }
     
     .row { display: flex; justify-content: space-between; padding: 0.4rem 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
     .row:last-child { border-bottom: none; }
@@ -43,21 +42,17 @@
     .toggle-grid label { background: #222; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.3rem; border: 1px solid #444; }
     .toggle-grid input { margin: 0; }
 
-    .bagang-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem; }
-    .bagang-btn { background: #252540; color: #fff; border: 1px solid #444; padding: 0.6rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; text-align: center; transition: 0.2s; }
-    .bagang-btn:hover { background: #333355; }
-    .bagang-btn.active { background: #4a148c; border-color: #9c27b0; }
-    .bagang-result { background: #2a1a35; padding: 1rem; border-radius: 6px; border-left: 4px solid #9c27b0; display: none; margin-top: 1rem; font-size: 0.9rem; }
-    
     .season-event { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 0.4rem 0; color: #ccc; }
     .season-event.highlight { color: var(--accent-gold); font-weight: bold; background: rgba(255, 170, 0, 0.1); padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; }
     
     .earth-phase-box { background: #2a2a1a; padding: 0.8rem; border-radius: 6px; margin-top: 0.8rem; border-left: 3px solid #8bc34a; font-size: 0.85rem; }
     
     /* Styling für die Geisterstunde */
-    .ghost-hour-box { background: #1a1a2a; border: 1px dashed #9c27b0; padding: 0.8rem; border-radius: 6px; margin-top: 1rem; text-align: center; display: none; }
-    .ghost-hour-box.active { display: block; animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { border-color: #9c27b0; box-shadow: 0 0 5px rgba(156, 39, 176, 0.2); } 50% { border-color: #e040fb; box-shadow: 0 0 15px rgba(224, 64, 251, 0.6); } 100% { border-color: #9c27b0; box-shadow: 0 0 5px rgba(156, 39, 176, 0.2); } }
+    .ghost-hour-box { background: #1a1a2a; border: 1px solid #4a148c; padding: 0.8rem; border-radius: 6px; margin-top: 1rem; text-align: center; transition: all 0.5s ease; }
+    .ghost-hour-box.active { border-color: #e040fb; background: #2a1a35; animation: pulse 2s infinite; box-shadow: 0 0 15px rgba(224, 64, 251, 0.4); }
+    @keyframes pulse { 0% { box-shadow: 0 0 5px rgba(224, 64, 251, 0.2); } 50% { box-shadow: 0 0 20px rgba(224, 64, 251, 0.6); } 100% { box-shadow: 0 0 5px rgba(224, 64, 251, 0.2); } }
+    .ghost-title { color: #e040fb; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.2rem; }
+    .ghost-text { font-size: 0.8rem; color: #ccc; }
   </style>
 </head>
 <body>
@@ -88,7 +83,6 @@
     <label><input type="checkbox" id="siderealToggle" checked style="accent-color: var(--accent-blue);"> Sternzeit</label>
     <label><input type="checkbox" id="farmerToggle" checked style="accent-color: var(--accent-green);"> Natur</label>
     <label><input type="checkbox" id="ganzhiToggle" checked style="accent-color: var(--accent-pink);"> Chinesisch</label>
-    <label><input type="checkbox" id="baGangToggle" checked style="accent-color: #9c27b0;"> Diagnostik</label>
     <label><input type="checkbox" id="seasonToggle" checked style="accent-color: #ff9800;"> Zeitenwende</label>
     <label><input type="checkbox" id="elementToggle" checked style="accent-color: #8bc34a;"> Elemente</label>
   </div>
@@ -143,10 +137,10 @@
       <div style="color: #aaa; font-size: 0.8rem; margin-top: 0.3rem;">Wahre Sonnenzeit: <span id="trueSolarTime" style="color: var(--accent-gold);">–</span></div>
     </div>
 
-    <!-- NEU: Die Geisterstunde -->
+    <!-- NEU: Die Geisterstunde mit Countdown -->
     <div id="ghostHourBox" class="ghost-hour-box">
-      <div style="color: #e040fb; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.3rem;">🌙 Geisterstunde (Zi-Zeit)</div>
-      <div style="font-size: 0.8rem; color: #ccc;">Die Zeit des tiefsten Yin. Ideal für Shen-Behandlungen (Geisterpunkte, Du 20).</div>
+      <div class="ghost-title">🌙 Geisterstunde (Zi-Zeit)</div>
+      <div id="ghostCountdown" class="ghost-text">Berechne Countdown...</div>
     </div>
 
     <div id="elementData" style="margin-bottom: 1rem; margin-top: 1rem;">
@@ -192,24 +186,6 @@
       <div class="row"><span class="label">Monat</span><span class="value" id="bzMonth" style="color: var(--accent-gold);">–</span></div>
       <div class="row"><span class="label">Tag</span><span class="value" id="bzDay" style="color: var(--accent-gold);">–</span></div>
       <div class="row"><span class="label">Stunde</span><span class="value" id="bzHour" style="color: var(--accent-gold);">–</span></div>
-    </div>
-  </div>
-
-  <div class="card" id="baGangData">
-    <div class="card-header baGang">⚖️ Diagnostik (Ba Gang)</div>
-    <div class="bagang-grid">
-      <button class="bagang-btn" data-key="yin">Yin (Leere/Kälte)</button>
-      <button class="bagang-btn" data-key="yang">Yang (Fülle/Hitze)</button>
-      <button class="bagang-btn" data-key="innen">Innen (Zang/Fu)</button>
-      <button class="bagang-btn" data-key="aussen">Außen (Haut/Muskeln)</button>
-      <button class="bagang-btn" data-key="kaelte">Kälte</button>
-      <button class="bagang-btn" data-key="hitze">Hitze</button>
-      <button class="bagang-btn" data-key="leere">Leere (Mangel)</button>
-      <button class="bagang-btn" data-key="fuelle">Fülle (Überschuss)</button>
-    </div>
-    <div id="bagangResultBox" class="bagang-result">
-      <div id="bagangTitle" style="font-weight: bold; color: #ce93d8; margin-bottom: 0.5rem;">–</div>
-      <div id="bagangStrategy" style="line-height: 1.4;">–</div>
     </div>
   </div>
 
@@ -263,14 +239,12 @@
       document.getElementById('liveClock').textContent = now.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: 'Europe/Zurich' });
       document.getElementById('liveDate').textContent = now.toLocaleDateString('de-CH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Europe/Zurich' });
 
-      // Wahre Sonnenzeit
       const times = SunCalc.getTimes(now, lat, lng);
       const solarNoon = times.solarNoon;
       const trueSolarTime = new Date(now.getTime() + (12 * 60 * 60 * 1000) - (solarNoon.getHours() * 60 * 60 * 1000 + solarNoon.getMinutes() * 60 * 1000));
       const trueHour = parseInt(trueSolarTime.toLocaleTimeString('de-CH', { hour: '2-digit', hour12: false }));
       document.getElementById('trueSolarTime').textContent = trueSolarTime.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Zurich' });
 
-      // TCM Organuhr
       const organs = [
         { start: 23, name: "Gallenblase (GB)", element: "Holz" }, { start: 1, name: "Leber (LE)", element: "Holz" }, 
         { start: 3, name: "Lunge (LU)", element: "Metall" }, { start: 5, name: "Dickdarm (DI)", element: "Metall" },
@@ -295,16 +269,36 @@
       document.getElementById('tcmOrgan').textContent = currentOrgan;
       document.getElementById('currentElement').textContent = currentElement;
 
-      // --- NEU: Geisterstunde (Zi-Zeit) ---
-      const ghostHourBox = document.getElementById('ghostHourBox');
-      // Die Zi-Zeit ist von 23:00 bis 01:00 Uhr (Wahre Sonnenzeit)
-      if (trueHour === 23 || trueHour === 0) {
-        ghostHourBox.classList.add('active');
+      // --- GEISTERSTUNDE MIT COUNTDOWN ---
+      const ghostBox = document.getElementById('ghostHourBox');
+      const ghostText = document.getElementById('ghostCountdown');
+      
+      // Wir berechnen die Differenz zur nächsten Zi-Zeit (23:00 Uhr Wahre Sonnenzeit)
+      const currentTrueMinutes = trueSolarTime.getHours() * 60 + trueSolarTime.getMinutes();
+      const ziStartMinutes = 23 * 60; // 23:00 Uhr
+      
+      let diffMinutes = ziStartMinutes - currentTrueMinutes;
+      if (diffMinutes < 0) {
+        // Wenn es nach 23:00 Uhr ist, zählt es bis 01:00 Uhr (Ende der Zi-Zeit)
+        if (currentTrueMinutes >= ziStartMinutes || currentTrueMinutes < 60) { // 23:00 bis 01:00
+          ghostBox.classList.add('active');
+          ghostText.innerHTML = "<b>AKTIV!</b> Jetzt ist die Zeit des tiefsten Yin. Ideal für Shen-Behandlungen (Geisterpunkte, Du 20).";
+          diffMinutes = 0;
+        } else {
+           // Wenn wir vor 23:00 Uhr sind, ist der Countdown für heute Abend
+          diffMinutes = ziStartMinutes - currentTrueMinutes;
+        }
       } else {
-        ghostHourBox.classList.remove('active');
+        // Wenn wir vor 23:00 Uhr sind, ist der Countdown für heute Abend
       }
 
-      // Jahreszeit nach TCM
+      if (diffMinutes > 0) {
+        ghostBox.classList.remove('active');
+        const hours = Math.floor(diffMinutes / 60);
+        const mins = diffMinutes % 60;
+        ghostText.innerHTML = `Beginnt in <b>${hours}h ${mins}min</b> (um 23:00 Wahre Sonnenzeit).`;
+      }
+
       const month = now.getMonth() + 1;
       const day = now.getDate();
       let season = "Unbekannt";
@@ -315,7 +309,6 @@
       if ((month === 8 && day >= 23) || (month === 9 && day < 10)) season = "Spätsommer (Erde)"; 
       document.getElementById('tcmSeason').textContent = season;
 
-      // --- ZEITENWENDE & ERDE-PHASE BERECHNUNG ---
       const currentYear = now.getFullYear();
       let seasonEvents = getSeasonEvents(currentYear);
       if (now > seasonEvents[3].date) {
@@ -344,7 +337,6 @@
         document.getElementById('nextSeasonEvent').textContent = `${nextEvent.name} in ${diffDays} Tagen (${formatDate(nextEvent.date)})`;
       }
 
-      // ERDE-PHASE UND JAHRES-ELEMENT BERECHNEN
       let currentYearElement = "Unbekannt";
       let earthPhaseStatus = "";
       let earthCountdown = "";
@@ -387,7 +379,6 @@
       document.getElementById('earthPhaseStatus').textContent = earthPhaseStatus;
       document.getElementById('earthCountdown').textContent = earthCountdown + " " + elementTransitionText;
 
-      // Sternzeit
       const jd = (now.getTime() / 86400000) + 2440587.5;
       const d = jd - 2451545.0;
       let gmst = 280.46061837 + 360.98564736629 * d;
@@ -397,14 +388,12 @@
       const h = Math.floor(totalSeconds / 3600); const m = Math.floor((totalSeconds % 3600) / 60); const s = Math.floor(totalSeconds % 60);
       document.getElementById('siderealTime').textContent = `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
 
-      // Bauernkalender
       let moonLon = 218.32 + 13.176396 * d + 6.29 * Math.sin((134.9 + 13.064993 * d) * Math.PI / 180);
       moonLon = moonLon % 360; if (moonLon < 0) moonLon += 360;
       const zodiacIndex = Math.floor(moonLon / 30);
       const plantDays = ["Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"];
       document.getElementById('farmerDay').textContent = plantDays[zodiacIndex];
 
-      // Planeten
       const planets = {
         'planetJupiter': { period: 11.86, offset: 0.5 },
         'planetSaturn': { period: 29.46, offset: 1.2 },
@@ -420,7 +409,6 @@
         document.getElementById(id).textContent = signs[signIndex];
       }
 
-      // Chinesischer Kalender
       const stems = ["Jia (Holz)", "Yi (Holz)", "Bing (Feuer)", "Ding (Feuer)", "Wu (Erde)", "Ji (Erde)", "Geng (Metall)", "Xin (Metall)", "Ren (Wasser)", "Gui (Wasser)"];
       const branches = ["Zi (Ratte)", "Chou (Ochse)", "Yin (Tiger)", "Mao (Hase)", "Chen (Drache)", "Si (Schlange)", "Wu (Pferd)", "Wei (Ziege)", "Shen (Affe)", "You (Hahn)", "Xu (Hund)", "Hai (Schwein)"];
       
@@ -572,34 +560,10 @@
     });
 
     // Schalter
-    ['tcm', 'moon', 'sidereal', 'farmer', 'ganzhi', 'baGang', 'season', 'element'].forEach(type => {
+    ['tcm', 'moon', 'sidereal', 'farmer', 'ganzhi', 'season', 'element'].forEach(type => {
       document.getElementById(type + 'Toggle').addEventListener('change', (event) => {
         const box = document.getElementById(type + 'Data');
         if (box) box.style.display = event.target.checked ? 'block' : 'none';
-      });
-    });
-
-    // Ba Gang Logik
-    const baGangData = {
-      yin: { title: "Yin", text: "Zeichen von Kälte, Leere und chronischen Zuständen. Behandlung: Wärmen, Tonisieren (z.B. Ren 4, Niere 3)." },
-      yang: { title: "Yang", text: "Zeichen von Hitze, Fülle und akuten Zuständen. Behandlung: Kühlen, Sedieren (z.B. Di 11, Du 14)." },
-      innen: { title: "Innen", text: "Die Krankheit sitzt in den Zang-Fu Organen. Behandlung: Die inneren Organe regulieren (z.B. über Mu- oder Shu-Punkte)." },
-      aussen: { title: "Außen", text: "Die Krankheit sitzt in Haut, Muskeln und Meridianen (z.B. Wind-Kälte). Behandlung: Schwitzen lassen, Äußeres lösen (z.B. Di 4, Lu 7)." },
-      kaelte: { title: "Kälte", text: "Zeichen: Frösteln, kalte Gliedmaßen, blasses Gesicht. Behandlung: Wärmen (Moxa), Kälte vertreiben (z.B. Ren 8, Ma 36)." },
-      hitze: { title: "Hitze", text: "Zeichen: Rotes Gesicht, Durst, Fieber. Behandlung: Hitze klären (z.B. Di 11, Du 14, Ma 44)." },
-      leere: { title: "Leere (Mangel)", text: "Zeichen: Erschöpfung, Schwäche, chronischer Verlauf. Behandlung: Tonisieren (Stärken) der betroffenen Organe (z.B. Ma 36, Ren 6)." },
-      fuelle: { title: "Fülle (Überschuss)", text: "Zeichen: Starke Schmerzen, Druck, akuter Verlauf. Behandlung: Sedieren (Ableiten) der pathogenen Faktoren (z.B. Lu 5, Ma 44)." }
-    };
-
-    document.querySelectorAll('.bagang-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.bagang-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const key = btn.getAttribute('data-key');
-        const data = baGangData[key];
-        document.getElementById('bagangTitle').textContent = data.title;
-        document.getElementById('bagangStrategy').textContent = data.text;
-        document.getElementById('bagangResultBox').style.display = 'block';
       });
     });
   </script>
