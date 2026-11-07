@@ -47,12 +47,16 @@
     
     .earth-phase-box { background: #2a2a1a; padding: 0.8rem; border-radius: 6px; margin-top: 0.8rem; border-left: 3px solid #8bc34a; font-size: 0.85rem; }
     
-    /* Styling für die Geisterstunde */
     .ghost-hour-box { background: #1a1a2a; border: 1px solid #4a148c; padding: 0.8rem; border-radius: 6px; margin-top: 1rem; text-align: center; transition: all 0.5s ease; }
     .ghost-hour-box.active { border-color: #e040fb; background: #2a1a35; animation: pulse 2s infinite; box-shadow: 0 0 15px rgba(224, 64, 251, 0.4); }
     @keyframes pulse { 0% { box-shadow: 0 0 5px rgba(224, 64, 251, 0.2); } 50% { box-shadow: 0 0 20px rgba(224, 64, 251, 0.6); } 100% { box-shadow: 0 0 5px rgba(224, 64, 251, 0.2); } }
     .ghost-title { color: #e040fb; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.2rem; }
     .ghost-text { font-size: 0.8rem; color: #ccc; }
+    
+    /* Styling für die Heavenly Stars */
+    .star-point-box { background: #1a2a3a; border: 1px solid #00bcd4; padding: 0.8rem; border-radius: 6px; margin-top: 1rem; text-align: center; }
+    .star-title { color: var(--accent-blue); font-weight: bold; font-size: 0.9rem; margin-bottom: 0.2rem; }
+    .star-text { font-size: 0.85rem; color: #eaeaea; }
   </style>
 </head>
 <body>
@@ -137,10 +141,15 @@
       <div style="color: #aaa; font-size: 0.8rem; margin-top: 0.3rem;">Wahre Sonnenzeit: <span id="trueSolarTime" style="color: var(--accent-gold);">–</span></div>
     </div>
 
-    <!-- NEU: Die Geisterstunde mit Countdown -->
     <div id="ghostHourBox" class="ghost-hour-box">
       <div class="ghost-title">🌙 Geisterstunde (Zi-Zeit)</div>
       <div id="ghostCountdown" class="ghost-text">Berechne Countdown...</div>
+    </div>
+
+    <!-- NEU: Heavenly Star Points -->
+    <div class="star-point-box">
+      <div class="star-title">✨ Heavenly Star (Himmlischer Stern)</div>
+      <div id="heavenlyStarText" class="star-text">Berechne...</div>
     </div>
 
     <div id="elementData" style="margin-bottom: 1rem; margin-top: 1rem;">
@@ -269,27 +278,22 @@
       document.getElementById('tcmOrgan').textContent = currentOrgan;
       document.getElementById('currentElement').textContent = currentElement;
 
-      // --- GEISTERSTUNDE MIT COUNTDOWN ---
+      // Geisterstunde
       const ghostBox = document.getElementById('ghostHourBox');
       const ghostText = document.getElementById('ghostCountdown');
       
-      // Wir berechnen die Differenz zur nächsten Zi-Zeit (23:00 Uhr Wahre Sonnenzeit)
       const currentTrueMinutes = trueSolarTime.getHours() * 60 + trueSolarTime.getMinutes();
-      const ziStartMinutes = 23 * 60; // 23:00 Uhr
+      const ziStartMinutes = 23 * 60; 
       
       let diffMinutes = ziStartMinutes - currentTrueMinutes;
       if (diffMinutes < 0) {
-        // Wenn es nach 23:00 Uhr ist, zählt es bis 01:00 Uhr (Ende der Zi-Zeit)
-        if (currentTrueMinutes >= ziStartMinutes || currentTrueMinutes < 60) { // 23:00 bis 01:00
+        if (currentTrueMinutes >= ziStartMinutes || currentTrueMinutes < 60) { 
           ghostBox.classList.add('active');
           ghostText.innerHTML = "<b>AKTIV!</b> Jetzt ist die Zeit des tiefsten Yin. Ideal für Shen-Behandlungen (Geisterpunkte, Du 20).";
           diffMinutes = 0;
         } else {
-           // Wenn wir vor 23:00 Uhr sind, ist der Countdown für heute Abend
           diffMinutes = ziStartMinutes - currentTrueMinutes;
         }
-      } else {
-        // Wenn wir vor 23:00 Uhr sind, ist der Countdown für heute Abend
       }
 
       if (diffMinutes > 0) {
@@ -473,6 +477,23 @@
       const ziWuHourIndex = hourBranchIndex % 5; 
       const ziWuPoint = ziWuMatrix[dayStemIndex][ziWuHourIndex];
       document.getElementById('ziWuPoint').textContent = ziWuPoint;
+
+      // --- NEU: HEAVENLY STAR POINTS ---
+      // Klassische Zuordnung der 5 Himmlischen Sterne zu den 10 Himmelsstämmen.
+      // (Muss ggf. mit den Unterlagen deines Lehrers abgeglichen werden).
+      const heavenlyStars = [
+        "Du 20 (Baihui) - Himmelstor (Jia)",    // Jia
+        "Ren 15 (Jiuwei) - Geist (Yi)",         // Yi
+        "Bl 1 (Jingming) - Licht (Bing)",       // Bing
+        "Du 16 (Fengfu) - Windtür (Ding)",      // Ding
+        "Du 14 (Dazhui) - Großer Wirbel (Wu)",  // Wu
+        "Ren 17 (Shanzhong) - Brustzentrum (Ji)", // Ji
+        "Bl 2 (Zanzhu) - Augen (Geng)",         // Geng
+        "Du 24 (Shenting) - Geisteshalle (Xin)", // Xin
+        "Du 26 (Renzhong) - Mitte (Ren)",       // Ren
+        "Ren 24 (Chengjiang) - Speichel (Gui)"  // Gui
+      ];
+      document.getElementById('heavenlyStarText').textContent = heavenlyStars[dayStemIndex];
 
       if (isTimeTravel) {
         document.getElementById('baZiData').style.display = 'block';
