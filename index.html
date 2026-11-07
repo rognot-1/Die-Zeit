@@ -53,6 +53,11 @@
     .season-event.highlight { color: var(--accent-gold); font-weight: bold; background: rgba(255, 170, 0, 0.1); padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; }
     
     .earth-phase-box { background: #2a2a1a; padding: 0.8rem; border-radius: 6px; margin-top: 0.8rem; border-left: 3px solid #8bc34a; font-size: 0.85rem; }
+    
+    /* Styling für die Geisterstunde */
+    .ghost-hour-box { background: #1a1a2a; border: 1px dashed #9c27b0; padding: 0.8rem; border-radius: 6px; margin-top: 1rem; text-align: center; display: none; }
+    .ghost-hour-box.active { display: block; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { border-color: #9c27b0; box-shadow: 0 0 5px rgba(156, 39, 176, 0.2); } 50% { border-color: #e040fb; box-shadow: 0 0 15px rgba(224, 64, 251, 0.6); } 100% { border-color: #9c27b0; box-shadow: 0 0 5px rgba(156, 39, 176, 0.2); } }
   </style>
 </head>
 <body>
@@ -138,7 +143,13 @@
       <div style="color: #aaa; font-size: 0.8rem; margin-top: 0.3rem;">Wahre Sonnenzeit: <span id="trueSolarTime" style="color: var(--accent-gold);">–</span></div>
     </div>
 
-    <div id="elementData" style="margin-bottom: 1rem;">
+    <!-- NEU: Die Geisterstunde -->
+    <div id="ghostHourBox" class="ghost-hour-box">
+      <div style="color: #e040fb; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.3rem;">🌙 Geisterstunde (Zi-Zeit)</div>
+      <div style="font-size: 0.8rem; color: #ccc;">Die Zeit des tiefsten Yin. Ideal für Shen-Behandlungen (Geisterpunkte, Du 20).</div>
+    </div>
+
+    <div id="elementData" style="margin-bottom: 1rem; margin-top: 1rem;">
       <div style="font-size: 0.9rem; color: #8bc34a; font-weight: bold; margin-bottom: 0.5rem;">Wu Xing (Jahreslauf)</div>
       <div class="row"><span class="label">Aktuelles Element (Jahr)</span><span class="value" id="currentYearElement" style="color: #8bc34a; font-weight: bold;">–</span></div>
       
@@ -284,6 +295,15 @@
       document.getElementById('tcmOrgan').textContent = currentOrgan;
       document.getElementById('currentElement').textContent = currentElement;
 
+      // --- NEU: Geisterstunde (Zi-Zeit) ---
+      const ghostHourBox = document.getElementById('ghostHourBox');
+      // Die Zi-Zeit ist von 23:00 bis 01:00 Uhr (Wahre Sonnenzeit)
+      if (trueHour === 23 || trueHour === 0) {
+        ghostHourBox.classList.add('active');
+      } else {
+        ghostHourBox.classList.remove('active');
+      }
+
       // Jahreszeit nach TCM
       const month = now.getMonth() + 1;
       const day = now.getDate();
@@ -324,7 +344,7 @@
         document.getElementById('nextSeasonEvent').textContent = `${nextEvent.name} in ${diffDays} Tagen (${formatDate(nextEvent.date)})`;
       }
 
-      // ERDE-PHASE UND JAHRES-ELEMENT BERECHNEN (mit exakter Zeit für die Erde-Phase)
+      // ERDE-PHASE UND JAHRES-ELEMENT BERECHNEN
       let currentYearElement = "Unbekannt";
       let earthPhaseStatus = "";
       let earthCountdown = "";
@@ -334,12 +354,10 @@
       else if (now >= seasonEvents[2].date && now < seasonEvents[3].date) currentYearElement = "Metall (Herbst)";
       else currentYearElement = "Wasser (Winter)";
 
-      // Die Erde-Phase beginnt exakt 18 Tage vor dem nächsten Wechsel (auf die Stunde genau)
       const msPerDay = 1000 * 60 * 60 * 24;
       const earthPhaseStart = new Date(nextEvent.date.getTime() - (18 * msPerDay));
       const earthPhaseEnd = nextEvent.date;
 
-      // Text für die Anzeige
       if (now >= earthPhaseStart && now < earthPhaseEnd) {
         earthPhaseStatus = "AKTIV (Erde-Zeit)";
         const daysLeft = (earthPhaseEnd - now) / msPerDay;
@@ -350,21 +368,15 @@
         earthCountdown = `Die Erde-Phase beginnt am ${formatDate(earthPhaseStart)} (in ${Math.ceil(daysUntilEarth)} Tagen).`;
       }
 
-      // NEU: Das Verlassen und Betreten der Erde
       let elementTransitionText = "";
-      
-      // Wir berechnen, welches Element gerade geht und welches kommt
       let leavingElement = "";
       let enteringElement = "";
       
-      // Das aktuelle Hauptelement verlässt die Erde am Ende der aktuellen Saison
-      // Das nächste Element betritt die Erde am Anfang der nächsten Saison
       if (currentYearElement.includes("Holz")) { leavingElement = "Holz"; enteringElement = "Feuer"; }
       else if (currentYearElement.includes("Feuer")) { leavingElement = "Feuer"; enteringElement = "Erde"; }
       else if (currentYearElement.includes("Metall")) { leavingElement = "Metall"; enteringElement = "Wasser"; }
       else if (currentYearElement.includes("Wasser")) { leavingElement = "Wasser"; enteringElement = "Holz"; }
 
-      // Die Übergangszeit ist die Erde-Phase
       if (now >= earthPhaseStart && now < earthPhaseEnd) {
         elementTransitionText = `Das ${leavingElement} verabschiedet sich, das ${enteringElement} kehrt in die Erde ein.`;
       } else {
