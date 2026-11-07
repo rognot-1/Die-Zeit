@@ -142,7 +142,6 @@
       <div style="font-size: 0.9rem; color: #8bc34a; font-weight: bold; margin-bottom: 0.5rem;">Wu Xing (Jahreslauf)</div>
       <div class="row"><span class="label">Aktuelles Element (Jahr)</span><span class="value" id="currentYearElement" style="color: #8bc34a; font-weight: bold;">–</span></div>
       
-      <!-- Die Erde-Phase -->
       <div class="earth-phase-box">
         <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
           <span>Erde-Phase (Übergang):</span> <span id="earthPhaseStatus" style="font-weight: bold;">–</span>
@@ -285,7 +284,7 @@
       document.getElementById('tcmOrgan').textContent = currentOrgan;
       document.getElementById('currentElement').textContent = currentElement;
 
-      // Jahreszeit nach TCM (für Wu Xing)
+      // Jahreszeit nach TCM
       const month = now.getMonth() + 1;
       const day = now.getDate();
       let season = "Unbekannt";
@@ -296,7 +295,7 @@
       if ((month === 8 && day >= 23) || (month === 9 && day < 10)) season = "Spätsommer (Erde)"; 
       document.getElementById('tcmSeason').textContent = season;
 
-      // --- NEU: Jahreslauf der Elemente und Erde-Phase ---
+      // --- ZEITENWENDE & ERDE-PHASE BERECHNUNG ---
       const currentYear = now.getFullYear();
       let seasonEvents = getSeasonEvents(currentYear);
       if (now > seasonEvents[3].date) {
@@ -325,33 +324,56 @@
         document.getElementById('nextSeasonEvent').textContent = `${nextEvent.name} in ${diffDays} Tagen (${formatDate(nextEvent.date)})`;
       }
 
-      // --- NEU: ERDE-PHASE UND JAHRES-ELEMENT BERECHNEN ---
+      // ERDE-PHASE UND JAHRES-ELEMENT BERECHNEN (mit exakter Zeit für die Erde-Phase)
       let currentYearElement = "Unbekannt";
       let earthPhaseStatus = "";
       let earthCountdown = "";
 
-      // Bestimmung des Hauptelementes (vereinfacht nach den Sonnenwenden)
       if (now >= seasonEvents[0].date && now < seasonEvents[1].date) currentYearElement = "Holz (Frühling)";
       else if (now >= seasonEvents[1].date && now < seasonEvents[2].date) currentYearElement = "Feuer (Sommer)";
       else if (now >= seasonEvents[2].date && now < seasonEvents[3].date) currentYearElement = "Metall (Herbst)";
       else currentYearElement = "Wasser (Winter)";
 
-      // Die Erde-Phase (ca. 18 Tage vor dem Wechsel)
-      // Wir berechnen den Abstand zum nächsten Ereignis
+      // Die Erde-Phase beginnt exakt 18 Tage vor dem nächsten Wechsel (auf die Stunde genau)
       const msPerDay = 1000 * 60 * 60 * 24;
-      const daysToNextEvent = (nextEvent.date - now) / msPerDay;
+      const earthPhaseStart = new Date(nextEvent.date.getTime() - (18 * msPerDay));
+      const earthPhaseEnd = nextEvent.date;
 
-      if (daysToNextEvent <= 18) {
+      // Text für die Anzeige
+      if (now >= earthPhaseStart && now < earthPhaseEnd) {
         earthPhaseStatus = "AKTIV (Erde-Zeit)";
-        earthCountdown = `Noch ${Math.ceil(daysToNextEvent)} Tage bis zum Wechsel in die nächste Jahreszeit. (Milz/Magen unterstützen!)`;
+        const daysLeft = (earthPhaseEnd - now) / msPerDay;
+        earthCountdown = `Die Erde-Phase endet in ${Math.ceil(daysLeft)} Tagen (${formatDate(earthPhaseEnd)}). Milz/Magen unterstützen!`;
       } else {
         earthPhaseStatus = "Inaktiv";
-        earthCountdown = `Die Erde-Phase beginnt in ${Math.ceil(daysToNextEvent - 18)} Tagen.`;
+        const daysUntilEarth = (earthPhaseStart - now) / msPerDay;
+        earthCountdown = `Die Erde-Phase beginnt am ${formatDate(earthPhaseStart)} (in ${Math.ceil(daysUntilEarth)} Tagen).`;
+      }
+
+      // NEU: Das Verlassen und Betreten der Erde
+      let elementTransitionText = "";
+      
+      // Wir berechnen, welches Element gerade geht und welches kommt
+      let leavingElement = "";
+      let enteringElement = "";
+      
+      // Das aktuelle Hauptelement verlässt die Erde am Ende der aktuellen Saison
+      // Das nächste Element betritt die Erde am Anfang der nächsten Saison
+      if (currentYearElement.includes("Holz")) { leavingElement = "Holz"; enteringElement = "Feuer"; }
+      else if (currentYearElement.includes("Feuer")) { leavingElement = "Feuer"; enteringElement = "Erde"; }
+      else if (currentYearElement.includes("Metall")) { leavingElement = "Metall"; enteringElement = "Wasser"; }
+      else if (currentYearElement.includes("Wasser")) { leavingElement = "Wasser"; enteringElement = "Holz"; }
+
+      // Die Übergangszeit ist die Erde-Phase
+      if (now >= earthPhaseStart && now < earthPhaseEnd) {
+        elementTransitionText = `Das ${leavingElement} verabschiedet sich, das ${enteringElement} kehrt in die Erde ein.`;
+      } else {
+        elementTransitionText = `Das ${currentYearElement.split(' ')[0]} ist im Zentrum. Die Erde-Phase beginnt in ${Math.ceil((earthPhaseStart - now) / msPerDay)} Tagen.`;
       }
 
       document.getElementById('currentYearElement').textContent = currentYearElement;
       document.getElementById('earthPhaseStatus').textContent = earthPhaseStatus;
-      document.getElementById('earthCountdown').textContent = earthCountdown;
+      document.getElementById('earthCountdown').textContent = earthCountdown + " " + elementTransitionText;
 
       // Sternzeit
       const jd = (now.getTime() / 86400000) + 2440587.5;
