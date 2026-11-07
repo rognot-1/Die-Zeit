@@ -57,12 +57,14 @@
     .star-title { color: var(--accent-blue); font-weight: bold; font-size: 0.9rem; margin-bottom: 0.2rem; }
     .star-text { font-size: 0.85rem; color: #eaeaea; }
     
-    /* Styling für die Acht Gefäße */
     .vessel-box { background: #2a1a1a; border: 1px solid #ff5722; padding: 0.8rem; border-radius: 6px; margin-top: 1rem; }
     .vessel-title { color: #ff7043; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.5rem; text-align: center; }
     .vessel-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.2rem; }
     .vessel-label { color: #ffab91; }
     .vessel-value { color: #fff; font-weight: bold; }
+
+    .solar-term-box { background: #1a2a1a; border: 1px solid #8bc34a; padding: 0.8rem; border-radius: 6px; margin-top: 1rem; }
+    .solar-term-title { color: #aed581; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.5rem; text-align: center; }
   </style>
 </head>
 <body>
@@ -96,6 +98,7 @@
     <label><input type="checkbox" id="seasonToggle" checked style="accent-color: #ff9800;"> Zeitenwende</label>
     <label><input type="checkbox" id="elementToggle" checked style="accent-color: #8bc34a;"> Elemente</label>
     <label><input type="checkbox" id="vesselToggle" checked style="accent-color: #ff5722;"> Acht Gefäße</label>
+    <label><input type="checkbox" id="solarTermToggle" checked style="accent-color: #aed581;"> Solar Terms</label>
   </div>
 
   <div class="card" id="natureData">
@@ -167,6 +170,19 @@
       <div class="vessel-row">
         <span class="vessel-label">Kopplungspunkt (Stunde):</span>
         <span class="vessel-value" id="vesselCoupledPoint">–</span>
+      </div>
+    </div>
+
+    <!-- NEU: Solar Terms (24 Sonnenjahresabschnitte) -->
+    <div id="solarTermData" class="solar-term-box">
+      <div class="solar-term-title">☀️ 24 Solar Terms (Jie)</div>
+      <div class="vessel-row">
+        <span class="vessel-label">Aktueller TCM-Monat:</span>
+        <span class="vessel-value" id="currentTcmMonth" style="color: #aed581;">–</span>
+      </div>
+      <div class="vessel-row">
+        <span class="vessel-label">Nächster Solar Term:</span>
+        <span class="vessel-value" id="nextSolarTerm" style="color: #aed581;">–</span>
       </div>
     </div>
 
@@ -257,6 +273,24 @@
         { name: "Sommersonnenwende", date: new Date(year, 5, 21, 4, 0) },
         { name: "Herbst-Äquinoktium", date: new Date(year, 8, 22, 20, 0) },
         { name: "Wintersonnenwende", date: new Date(year, 11, 21, 16, 0) }
+      ];
+    }
+
+    // 24 Solar Terms (genäherte Daten für die Haupt-Jie)
+    function getSolarTerms(year) {
+      return [
+        { name: "Lichun (Frühlingsanfang)", date: new Date(year, 1, 4) },
+        { name: "Jingzhe (Insekten erwachen)", date: new Date(year, 2, 5) },
+        { name: "Qingming (Klar und hell)", date: new Date(year, 3, 4) },
+        { name: "Lixia (Sommeranfang)", date: new Date(year, 4, 5) },
+        { name: "Mangzhong (Kornähren)", date: new Date(year, 5, 5) },
+        { name: "Xiaoshu (Kleine Hitze)", date: new Date(year, 6, 7) },
+        { name: "Liqiu (Herbstanfang)", date: new Date(year, 7, 7) },
+        { name: "Bailu (Weißer Tau)", date: new Date(year, 8, 7) },
+        { name: "Hanlu (Kalter Tau)", date: new Date(year, 9, 8) },
+        { name: "Lidong (Winteranfang)", date: new Date(year, 10, 7) },
+        { name: "Daxue (Großer Schnee)", date: new Date(year, 11, 7) },
+        { name: "Xiaohan (Kleine Kälte)", date: new Date(year, 0, 5) } // Startet im Januar
       ];
     }
 
@@ -401,6 +435,40 @@
       document.getElementById('earthPhaseStatus').textContent = earthPhaseStatus;
       document.getElementById('earthCountdown').textContent = earthCountdown + " " + elementTransitionText;
 
+      // --- NEU: Solar Terms (24 Sonnenjahresabschnitte) ---
+      let solarTerms = getSolarTerms(currentYear);
+      // Wenn wir nach dem letzten Term des Jahres sind, brauchen wir die Termine des nächsten Jahres
+      if (now > solarTerms[11].date) {
+        solarTerms = solarTerms.concat(getSolarTerms(currentYear + 1));
+      }
+      
+      let currentTcmMonth = "";
+      let nextSolarTerm = null;
+      
+      // Da die Liste unregelmässig sortiert ist (Xiaohan ist im Januar), sortieren wir sie nach Datum
+      solarTerms.sort((a, b) => a.date - b.date);
+
+      for (let i = 0; i < solarTerms.length; i++) {
+        if (solarTerms[i].date > now) {
+          nextSolarTerm = solarTerms[i];
+          // Der aktuelle TCM-Monat ist der Term davor
+          if (i > 0) {
+            currentTcmMonth = solarTerms[i-1].name;
+          } else {
+             currentTcmMonth = "Vor dem Jahresanfang";
+          }
+          break;
+        }
+      }
+
+      if (currentTcmMonth) {
+        document.getElementById('currentTcmMonth').textContent = currentTcmMonth;
+      }
+      if (nextSolarTerm) {
+        document.getElementById('nextSolarTerm').textContent = `${nextSolarTerm.name} (${formatDate(nextSolarTerm.date)})`;
+      }
+
+      // Sternzeit
       const jd = (now.getTime() / 86400000) + 2440587.5;
       const d = jd - 2451545.0;
       let gmst = 280.46061837 + 360.98564736629 * d;
@@ -410,12 +478,14 @@
       const h = Math.floor(totalSeconds / 3600); const m = Math.floor((totalSeconds % 3600) / 60); const s = Math.floor(totalSeconds % 60);
       document.getElementById('siderealTime').textContent = `${h.toString().padStart(2, '0')}h ${m.toString().padStart(2, '0')}m ${s.toString().padStart(2, '0')}s`;
 
+      // Bauernkalender
       let moonLon = 218.32 + 13.176396 * d + 6.29 * Math.sin((134.9 + 13.064993 * d) * Math.PI / 180);
       moonLon = moonLon % 360; if (moonLon < 0) moonLon += 360;
       const zodiacIndex = Math.floor(moonLon / 30);
       const plantDays = ["Wurzeltag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)", "Fruchttag (Feuer)", "Wurzeltag (Erde)", "Blütentag (Luft)", "Blattag (Wasser)"];
       document.getElementById('farmerDay').textContent = plantDays[zodiacIndex];
 
+      // Planeten
       const planets = {
         'planetJupiter': { period: 11.86, offset: 0.5 },
         'planetSaturn': { period: 29.46, offset: 1.2 },
@@ -431,6 +501,7 @@
         document.getElementById(id).textContent = signs[signIndex];
       }
 
+      // Chinesischer Kalender
       const stems = ["Jia (Holz)", "Yi (Holz)", "Bing (Feuer)", "Ding (Feuer)", "Wu (Erde)", "Ji (Erde)", "Geng (Metall)", "Xin (Metall)", "Ren (Wasser)", "Gui (Wasser)"];
       const branches = ["Zi (Ratte)", "Chou (Ochse)", "Yin (Tiger)", "Mao (Hase)", "Chen (Drache)", "Si (Schlange)", "Wu (Pferd)", "Wei (Ziege)", "Shen (Affe)", "You (Hahn)", "Xu (Hund)", "Hai (Schwein)"];
       
@@ -511,39 +582,19 @@
       ];
       document.getElementById('heavenlyStarText').textContent = heavenlyStars[dayStemIndex];
 
-      // --- NEU: DIE ACHT GEFÄSSE (Öffnungs- und Kopplungspunkte) ---
-      // Die Öffnungspunkte hängen vom Tages-Stamm (dayStemIndex) ab.
-      // Die Kopplungspunkte hängen vom Stunden-Zweig (hourBranchIndex) ab.
-      
+      // Acht Gefäße
       const vesselOpenings = [
-        "Dü 3 (Houxi) - Du Mai",       // Jia
-        "Bl 62 (Shenmai) - Yang Qiao", // Yi
-        "Gb 41 (Zulinqi) - Dai Mai",   // Bing
-        "3E 5 (Waiguan) - Yang Wei",   // Ding
-        "Lu 7 (Lieque) - Ren Mai",     // Wu
-        "Ni 6 (Zhaohai) - Yin Qiao",   // Ji
-        "Mi 4 (Gongsun) - Chong Mai",  // Geng
-        "Pe 6 (Neiguan) - Yin Wei"     // Xin
+        "Dü 3 (Houxi) - Du Mai", "Bl 62 (Shenmai) - Yang Qiao", "Gb 41 (Zulinqi) - Dai Mai", "3E 5 (Waiguan) - Yang Wei",
+        "Lu 7 (Lieque) - Ren Mai", "Ni 6 (Zhaohai) - Yin Qiao", "Mi 4 (Gongsun) - Chong Mai", "Pe 6 (Neiguan) - Yin Wei"
       ];
-
       const vesselCouplings = [
-        "Bl 62 (Shenmai) - Yang Qiao", // Zi
-        "Dü 3 (Houxi) - Du Mai",       // Chou
-        "Ni 6 (Zhaohai) - Yin Qiao",   // Yin
-        "Lu 7 (Lieque) - Ren Mai",     // Mao
-        "Pe 6 (Neiguan) - Yin Wei",    // Chen
-        "Mi 4 (Gongsun) - Chong Mai",  // Si
-        "3E 5 (Waiguan) - Yang Wei",   // Wu
-        "Gb 41 (Zulinqi) - Dai Mai",   // Wei
-        "Bl 62 (Shenmai) - Yang Qiao", // Shen
-        "Dü 3 (Houxi) - Du Mai",       // You
-        "Ni 6 (Zhaohai) - Yin Qiao",   // Xu
-        "Lu 7 (Lieque) - Ren Mai"      // Hai
+        "Bl 62 (Shenmai) - Yang Qiao", "Dü 3 (Houxi) - Du Mai", "Ni 6 (Zhaohai) - Yin Qiao", "Lu 7 (Lieque) - Ren Mai",
+        "Pe 6 (Neiguan) - Yin Wei", "Mi 4 (Gongsun) - Chong Mai", "3E 5 (Waiguan) - Yang Wei", "Gb 41 (Zulinqi) - Dai Mai",
+        "Bl 62 (Shenmai) - Yang Qiao", "Dü 3 (Houxi) - Du Mai", "Ni 6 (Zhaohai) - Yin Qiao", "Lu 7 (Lieque) - Ren Mai"
       ];
 
-      // Da es 10 Stämme aber 8 Gefäße gibt, fassen wir die letzten beiden zusammen (Ren/Gui)
       let openingIndex = dayStemIndex;
-      if (openingIndex >= 8) openingIndex = openingIndex - 8; // Ren und Gui nutzen die letzten beiden
+      if (openingIndex >= 8) openingIndex = openingIndex - 8; 
 
       document.getElementById('vesselOpeningPoint').textContent = vesselOpenings[openingIndex];
       document.getElementById('vesselCoupledPoint').textContent = vesselCouplings[hourBranchIndex];
@@ -634,7 +685,7 @@
     });
 
     // Schalter
-    ['tcm', 'moon', 'sidereal', 'farmer', 'ganzhi', 'season', 'element', 'vessel'].forEach(type => {
+    ['tcm', 'moon', 'sidereal', 'farmer', 'ganzhi', 'season', 'element', 'vessel', 'solarTerm'].forEach(type => {
       document.getElementById(type + 'Toggle').addEventListener('change', (event) => {
         const box = document.getElementById(type + 'Data');
         if (box) box.style.display = event.target.checked ? 'block' : 'none';
