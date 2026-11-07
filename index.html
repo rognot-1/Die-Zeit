@@ -53,10 +53,16 @@
     .ghost-title { color: #e040fb; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.2rem; }
     .ghost-text { font-size: 0.8rem; color: #ccc; }
     
-    /* Styling für die Heavenly Stars */
     .star-point-box { background: #1a2a3a; border: 1px solid #00bcd4; padding: 0.8rem; border-radius: 6px; margin-top: 1rem; text-align: center; }
     .star-title { color: var(--accent-blue); font-weight: bold; font-size: 0.9rem; margin-bottom: 0.2rem; }
     .star-text { font-size: 0.85rem; color: #eaeaea; }
+    
+    /* Styling für die Acht Gefäße */
+    .vessel-box { background: #2a1a1a; border: 1px solid #ff5722; padding: 0.8rem; border-radius: 6px; margin-top: 1rem; }
+    .vessel-title { color: #ff7043; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.5rem; text-align: center; }
+    .vessel-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.2rem; }
+    .vessel-label { color: #ffab91; }
+    .vessel-value { color: #fff; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -89,6 +95,7 @@
     <label><input type="checkbox" id="ganzhiToggle" checked style="accent-color: var(--accent-pink);"> Chinesisch</label>
     <label><input type="checkbox" id="seasonToggle" checked style="accent-color: #ff9800;"> Zeitenwende</label>
     <label><input type="checkbox" id="elementToggle" checked style="accent-color: #8bc34a;"> Elemente</label>
+    <label><input type="checkbox" id="vesselToggle" checked style="accent-color: #ff5722;"> Acht Gefäße</label>
   </div>
 
   <div class="card" id="natureData">
@@ -146,10 +153,21 @@
       <div id="ghostCountdown" class="ghost-text">Berechne Countdown...</div>
     </div>
 
-    <!-- NEU: Heavenly Star Points -->
     <div class="star-point-box">
       <div class="star-title">✨ Heavenly Star (Himmlischer Stern)</div>
       <div id="heavenlyStarText" class="star-text">Berechne...</div>
+    </div>
+
+    <div id="vesselData" class="vessel-box">
+      <div class="vessel-title">🌊 Acht Gefäße (Ba Mai)</div>
+      <div class="vessel-row">
+        <span class="vessel-label">Öffnungspunkt (Tag):</span>
+        <span class="vessel-value" id="vesselOpeningPoint">–</span>
+      </div>
+      <div class="vessel-row">
+        <span class="vessel-label">Kopplungspunkt (Stunde):</span>
+        <span class="vessel-value" id="vesselCoupledPoint">–</span>
+      </div>
     </div>
 
     <div id="elementData" style="margin-bottom: 1rem; margin-top: 1rem;">
@@ -478,22 +496,57 @@
       const ziWuPoint = ziWuMatrix[dayStemIndex][ziWuHourIndex];
       document.getElementById('ziWuPoint').textContent = ziWuPoint;
 
-      // --- NEU: HEAVENLY STAR POINTS ---
-      // Klassische Zuordnung der 5 Himmlischen Sterne zu den 10 Himmelsstämmen.
-      // (Muss ggf. mit den Unterlagen deines Lehrers abgeglichen werden).
+      // Heavenly Stars
       const heavenlyStars = [
-        "Du 20 (Baihui) - Himmelstor (Jia)",    // Jia
-        "Ren 15 (Jiuwei) - Geist (Yi)",         // Yi
-        "Bl 1 (Jingming) - Licht (Bing)",       // Bing
-        "Du 16 (Fengfu) - Windtür (Ding)",      // Ding
-        "Du 14 (Dazhui) - Großer Wirbel (Wu)",  // Wu
-        "Ren 17 (Shanzhong) - Brustzentrum (Ji)", // Ji
-        "Bl 2 (Zanzhu) - Augen (Geng)",         // Geng
-        "Du 24 (Shenting) - Geisteshalle (Xin)", // Xin
-        "Du 26 (Renzhong) - Mitte (Ren)",       // Ren
-        "Ren 24 (Chengjiang) - Speichel (Gui)"  // Gui
+        "Du 20 (Baihui) - Himmelstor (Jia)",
+        "Ren 15 (Jiuwei) - Geist (Yi)",
+        "Bl 1 (Jingming) - Licht (Bing)",
+        "Du 16 (Fengfu) - Windtür (Ding)",
+        "Du 14 (Dazhui) - Großer Wirbel (Wu)",
+        "Ren 17 (Shanzhong) - Brustzentrum (Ji)",
+        "Bl 2 (Zanzhu) - Augen (Geng)",
+        "Du 24 (Shenting) - Geisteshalle (Xin)",
+        "Du 26 (Renzhong) - Mitte (Ren)",
+        "Ren 24 (Chengjiang) - Speichel (Gui)"
       ];
       document.getElementById('heavenlyStarText').textContent = heavenlyStars[dayStemIndex];
+
+      // --- NEU: DIE ACHT GEFÄSSE (Öffnungs- und Kopplungspunkte) ---
+      // Die Öffnungspunkte hängen vom Tages-Stamm (dayStemIndex) ab.
+      // Die Kopplungspunkte hängen vom Stunden-Zweig (hourBranchIndex) ab.
+      
+      const vesselOpenings = [
+        "Dü 3 (Houxi) - Du Mai",       // Jia
+        "Bl 62 (Shenmai) - Yang Qiao", // Yi
+        "Gb 41 (Zulinqi) - Dai Mai",   // Bing
+        "3E 5 (Waiguan) - Yang Wei",   // Ding
+        "Lu 7 (Lieque) - Ren Mai",     // Wu
+        "Ni 6 (Zhaohai) - Yin Qiao",   // Ji
+        "Mi 4 (Gongsun) - Chong Mai",  // Geng
+        "Pe 6 (Neiguan) - Yin Wei"     // Xin
+      ];
+
+      const vesselCouplings = [
+        "Bl 62 (Shenmai) - Yang Qiao", // Zi
+        "Dü 3 (Houxi) - Du Mai",       // Chou
+        "Ni 6 (Zhaohai) - Yin Qiao",   // Yin
+        "Lu 7 (Lieque) - Ren Mai",     // Mao
+        "Pe 6 (Neiguan) - Yin Wei",    // Chen
+        "Mi 4 (Gongsun) - Chong Mai",  // Si
+        "3E 5 (Waiguan) - Yang Wei",   // Wu
+        "Gb 41 (Zulinqi) - Dai Mai",   // Wei
+        "Bl 62 (Shenmai) - Yang Qiao", // Shen
+        "Dü 3 (Houxi) - Du Mai",       // You
+        "Ni 6 (Zhaohai) - Yin Qiao",   // Xu
+        "Lu 7 (Lieque) - Ren Mai"      // Hai
+      ];
+
+      // Da es 10 Stämme aber 8 Gefäße gibt, fassen wir die letzten beiden zusammen (Ren/Gui)
+      let openingIndex = dayStemIndex;
+      if (openingIndex >= 8) openingIndex = openingIndex - 8; // Ren und Gui nutzen die letzten beiden
+
+      document.getElementById('vesselOpeningPoint').textContent = vesselOpenings[openingIndex];
+      document.getElementById('vesselCoupledPoint').textContent = vesselCouplings[hourBranchIndex];
 
       if (isTimeTravel) {
         document.getElementById('baZiData').style.display = 'block';
@@ -581,7 +634,7 @@
     });
 
     // Schalter
-    ['tcm', 'moon', 'sidereal', 'farmer', 'ganzhi', 'season', 'element'].forEach(type => {
+    ['tcm', 'moon', 'sidereal', 'farmer', 'ganzhi', 'season', 'element', 'vessel'].forEach(type => {
       document.getElementById(type + 'Toggle').addEventListener('change', (event) => {
         const box = document.getElementById(type + 'Data');
         if (box) box.style.display = event.target.checked ? 'block' : 'none';
