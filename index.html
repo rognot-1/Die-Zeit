@@ -49,9 +49,10 @@
     .bagang-btn.active { background: #4a148c; border-color: #9c27b0; }
     .bagang-result { background: #2a1a35; padding: 1rem; border-radius: 6px; border-left: 4px solid #9c27b0; display: none; margin-top: 1rem; font-size: 0.9rem; }
     
-    /* Styling für die Zeitenwende */
     .season-event { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 0.4rem 0; color: #ccc; }
     .season-event.highlight { color: var(--accent-gold); font-weight: bold; background: rgba(255, 170, 0, 0.1); padding: 0.5rem; border-radius: 4px; margin-top: 0.5rem; }
+    
+    .earth-phase-box { background: #2a2a1a; padding: 0.8rem; border-radius: 6px; margin-top: 0.8rem; border-left: 3px solid #8bc34a; font-size: 0.85rem; }
   </style>
 </head>
 <body>
@@ -84,12 +85,12 @@
     <label><input type="checkbox" id="ganzhiToggle" checked style="accent-color: var(--accent-pink);"> Chinesisch</label>
     <label><input type="checkbox" id="baGangToggle" checked style="accent-color: #9c27b0;"> Diagnostik</label>
     <label><input type="checkbox" id="seasonToggle" checked style="accent-color: #ff9800;"> Zeitenwende</label>
+    <label><input type="checkbox" id="elementToggle" checked style="accent-color: #8bc34a;"> Elemente</label>
   </div>
 
   <div class="card" id="natureData">
     <div class="card-header nature">🌿 Natur & Kosmos</div>
     
-    <!-- NEU: Zeitenwende Sektion -->
     <div id="seasonData" style="margin-bottom: 1rem; border-bottom: 1px solid #333; padding-bottom: 1rem;">
       <div style="font-size: 0.9rem; color: var(--accent-gold); font-weight: bold; margin-bottom: 0.5rem;">Sonnenwenden & Tagundnachtgleichen</div>
       <div id="seasonEvents">
@@ -135,6 +136,19 @@
       <div style="color: #aaa; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;">Aktuelle TCM-Organzeit</div>
       <div id="tcmOrgan" style="font-size: 1.4rem; font-weight: bold; color: var(--accent-gold); margin-top: 0.2rem;">Berechne...</div>
       <div style="color: #aaa; font-size: 0.8rem; margin-top: 0.3rem;">Wahre Sonnenzeit: <span id="trueSolarTime" style="color: var(--accent-gold);">–</span></div>
+    </div>
+
+    <div id="elementData" style="margin-bottom: 1rem;">
+      <div style="font-size: 0.9rem; color: #8bc34a; font-weight: bold; margin-bottom: 0.5rem;">Wu Xing (Jahreslauf)</div>
+      <div class="row"><span class="label">Aktuelles Element (Jahr)</span><span class="value" id="currentYearElement" style="color: #8bc34a; font-weight: bold;">–</span></div>
+      
+      <!-- Die Erde-Phase -->
+      <div class="earth-phase-box">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
+          <span>Erde-Phase (Übergang):</span> <span id="earthPhaseStatus" style="font-weight: bold;">–</span>
+        </div>
+        <div id="earthCountdown" style="color: #ccc; font-size: 0.8rem;">–</div>
+      </div>
     </div>
 
     <div id="wuXingData">
@@ -224,16 +238,12 @@
       document.getElementById('moonset').textContent = formatTime(moonTimes.set);
     }
 
-    // Hilfsfunktion für die exakten Zeitenwenden (Näherung: 20./21. März, 21. Juni, 22./23. Sept, 21./22. Dez)
-    // Da die exakten Zeiten jedes Jahr um ein paar Stunden schwanken, nutzen wir eine genaue Berechnung für das aktuelle Jahr.
-    // Für eine absolut sekundengenaue Berechnung bräuchten wir ein astronomisches Ephemeridensystem, aber für die TCM reicht die Tagesgenauigkeit.
     function getSeasonEvents(year) {
-      // Ungefähre Zeitpunkte für die Mitteleuropäische Zeitzone
       return [
-        { name: "Frühlings-Äquinoktium", date: new Date(year, 2, 20, 10, 0) }, // 20. März
-        { name: "Sommersonnenwende", date: new Date(year, 5, 21, 4, 0) },     // 21. Juni
-        { name: "Herbst-Äquinoktium", date: new Date(year, 8, 22, 20, 0) },   // 22. Sept
-        { name: "Wintersonnenwende", date: new Date(year, 11, 21, 16, 0) }    // 21. Dez
+        { name: "Frühlings-Äquinoktium", date: new Date(year, 2, 20, 10, 0) },
+        { name: "Sommersonnenwende", date: new Date(year, 5, 21, 4, 0) },
+        { name: "Herbst-Äquinoktium", date: new Date(year, 8, 22, 20, 0) },
+        { name: "Wintersonnenwende", date: new Date(year, 11, 21, 16, 0) }
       ];
     }
 
@@ -275,7 +285,7 @@
       document.getElementById('tcmOrgan').textContent = currentOrgan;
       document.getElementById('currentElement').textContent = currentElement;
 
-      // Jahreszeit nach TCM
+      // Jahreszeit nach TCM (für Wu Xing)
       const month = now.getMonth() + 1;
       const day = now.getDate();
       let season = "Unbekannt";
@@ -286,11 +296,9 @@
       if ((month === 8 && day >= 23) || (month === 9 && day < 10)) season = "Spätsommer (Erde)"; 
       document.getElementById('tcmSeason').textContent = season;
 
-      // --- ZEITENWENDE BERECHNUNG ---
+      // --- NEU: Jahreslauf der Elemente und Erde-Phase ---
       const currentYear = now.getFullYear();
       let seasonEvents = getSeasonEvents(currentYear);
-      
-      // Wenn wir nach der Wintersonnenwende sind, brauchen wir die Ereignisse des nächsten Jahres für den Countdown
       if (now > seasonEvents[3].date) {
         seasonEvents = seasonEvents.concat(getSeasonEvents(currentYear + 1));
       }
@@ -303,7 +311,6 @@
       document.getElementById('autumnEquinox').textContent = formatDate(seasonEvents[2].date) + " " + formatTimeOnly(seasonEvents[2].date);
       document.getElementById('winterSolstice').textContent = formatDate(seasonEvents[3].date) + " " + formatTimeOnly(seasonEvents[3].date);
 
-      // Nächstes Ereignis finden
       let nextEvent = null;
       for (let ev of seasonEvents) {
         if (ev.date > now) {
@@ -315,9 +322,36 @@
       if (nextEvent) {
         const diffTime = Math.abs(nextEvent.date - now);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         document.getElementById('nextSeasonEvent').textContent = `${nextEvent.name} in ${diffDays} Tagen (${formatDate(nextEvent.date)})`;
       }
+
+      // --- NEU: ERDE-PHASE UND JAHRES-ELEMENT BERECHNEN ---
+      let currentYearElement = "Unbekannt";
+      let earthPhaseStatus = "";
+      let earthCountdown = "";
+
+      // Bestimmung des Hauptelementes (vereinfacht nach den Sonnenwenden)
+      if (now >= seasonEvents[0].date && now < seasonEvents[1].date) currentYearElement = "Holz (Frühling)";
+      else if (now >= seasonEvents[1].date && now < seasonEvents[2].date) currentYearElement = "Feuer (Sommer)";
+      else if (now >= seasonEvents[2].date && now < seasonEvents[3].date) currentYearElement = "Metall (Herbst)";
+      else currentYearElement = "Wasser (Winter)";
+
+      // Die Erde-Phase (ca. 18 Tage vor dem Wechsel)
+      // Wir berechnen den Abstand zum nächsten Ereignis
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const daysToNextEvent = (nextEvent.date - now) / msPerDay;
+
+      if (daysToNextEvent <= 18) {
+        earthPhaseStatus = "AKTIV (Erde-Zeit)";
+        earthCountdown = `Noch ${Math.ceil(daysToNextEvent)} Tage bis zum Wechsel in die nächste Jahreszeit. (Milz/Magen unterstützen!)`;
+      } else {
+        earthPhaseStatus = "Inaktiv";
+        earthCountdown = `Die Erde-Phase beginnt in ${Math.ceil(daysToNextEvent - 18)} Tagen.`;
+      }
+
+      document.getElementById('currentYearElement').textContent = currentYearElement;
+      document.getElementById('earthPhaseStatus').textContent = earthPhaseStatus;
+      document.getElementById('earthCountdown').textContent = earthCountdown;
 
       // Sternzeit
       const jd = (now.getTime() / 86400000) + 2440587.5;
@@ -504,7 +538,7 @@
     });
 
     // Schalter
-    ['tcm', 'moon', 'sidereal', 'farmer', 'ganzhi', 'baGang', 'season'].forEach(type => {
+    ['tcm', 'moon', 'sidereal', 'farmer', 'ganzhi', 'baGang', 'season', 'element'].forEach(type => {
       document.getElementById(type + 'Toggle').addEventListener('change', (event) => {
         const box = document.getElementById(type + 'Data');
         if (box) box.style.display = event.target.checked ? 'block' : 'none';
