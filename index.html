@@ -181,9 +181,9 @@
     </div>
 
     <div id="vesselData" class="vessel-box">
-      <div class="vessel-title">🌊 Acht Gefäße (Ba Mai)</div>
+      <div class="vessel-title">🌊 Acht Gefäße (Ba Mai) - 60-Tage-Zyklus</div>
       <div class="vessel-row">
-        <span class="vessel-label">Öffnungspunkt (Tag):</span>
+        <span class="vessel-label">Öffnungspunkt (Ling Gui):</span>
         <span class="vessel-value" id="vesselOpeningPoint">–</span>
       </div>
       <div class="vessel-row">
@@ -598,21 +598,48 @@
       ];
       document.getElementById('heavenlyStarText').textContent = heavenlyStars[dayStemIndex];
 
-      // Acht Gefäße
-      const vesselOpenings = [
-        "Dü 3 (Houxi) - Du Mai", "Bl 62 (Shenmai) - Yang Qiao", "Gb 41 (Zulinqi) - Dai Mai", "3E 5 (Waiguan) - Yang Wei",
-        "Lu 7 (Lieque) - Ren Mai", "Ni 6 (Zhaohai) - Yin Qiao", "Mi 4 (Gongsun) - Chong Mai", "Pe 6 (Neiguan) - Yin Wei"
+      // --- NEU: ACHT GEFÄSSE (Ling Gui Ba Fa) mit 60-Tage-Zyklus ---
+      // Die 60-Tage-Matrix für die Öffnungspunkte (Master Points) der Acht Gefäße.
+      // Die Matrix wiederholt sich alle 60 Tage.
+      
+      const lingGuiMatrix = [
+        // Tag 1-10
+        ["Gb 41 (Dai Mai)", "3E 5 (Yang Wei)", "Dü 3 (Du Mai)", "Bl 62 (Yang Qiao)", "Pe 6 (Yin Wei)", "Lu 7 (Ren Mai)", "Ni 6 (Yin Qiao)", "Mi 4 (Chong Mai)", "Gb 41 (Dai Mai)", "3E 5 (Yang Wei)"],
+        // Tag 11-20
+        ["Dü 3 (Du Mai)", "Bl 62 (Yang Qiao)", "Pe 6 (Yin Wei)", "Lu 7 (Ren Mai)", "Ni 6 (Yin Qiao)", "Mi 4 (Chong Mai)", "Gb 41 (Dai Mai)", "3E 5 (Yang Wei)", "Dü 3 (Du Mai)", "Bl 62 (Yang Qiao)"],
+        // Tag 21-30
+        ["Pe 6 (Yin Wei)", "Lu 7 (Ren Mai)", "Ni 6 (Yin Qiao)", "Mi 4 (Chong Mai)", "Gb 41 (Dai Mai)", "3E 5 (Yang Wei)", "Dü 3 (Du Mai)", "Bl 62 (Yang Qiao)", "Pe 6 (Yin Wei)", "Lu 7 (Ren Mai)"],
+        // Tag 31-40
+        ["Ni 6 (Yin Qiao)", "Mi 4 (Chong Mai)", "Gb 41 (Dai Mai)", "3E 5 (Yang Wei)", "Dü 3 (Du Mai)", "Bl 62 (Yang Qiao)", "Pe 6 (Yin Wei)", "Lu 7 (Ren Mai)", "Ni 6 (Yin Qiao)", "Mi 4 (Chong Mai)"],
+        // Tag 41-50
+        ["Gb 41 (Dai Mai)", "3E 5 (Yang Wei)", "Dü 3 (Du Mai)", "Bl 62 (Yang Qiao)", "Pe 6 (Yin Wei)", "Lu 7 (Ren Mai)", "Ni 6 (Yin Qiao)", "Mi 4 (Chong Mai)", "Gb 41 (Dai Mai)", "3E 5 (Yang Wei)"],
+        // Tag 51-60
+        ["Dü 3 (Du Mai)", "Bl 62 (Yang Qiao)", "Pe 6 (Yin Wei)", "Lu 7 (Ren Mai)", "Ni 6 (Yin Qiao)", "Mi 4 (Chong Mai)", "Gb 41 (Dai Mai)", "3E 5 (Yang Wei)", "Dü 3 (Du Mai)", "Bl 62 (Yang Qiao)"]
       ];
+
+      // Berechnung des aktuellen Tages im 60-Tage-Zyklus (1-60)
+      // Die Berechnung basiert auf dem Referenzdatum (1.1.1900) und dem Tages-Stamm/Zweig.
+      const dayIn60Cycle = ((daysSince1900 + 10) % 60); // 0-59
+      const cycleIndex = dayIn60Cycle % 10; // 0-9 (Position im 10er-Block)
+      
+      let matrixRow = 0;
+      if (dayIn60Cycle < 10) matrixRow = 0;
+      else if (dayIn60Cycle < 20) matrixRow = 1;
+      else if (dayIn60Cycle < 30) matrixRow = 2;
+      else if (dayIn60Cycle < 40) matrixRow = 3;
+      else if (dayIn60Cycle < 50) matrixRow = 4;
+      else matrixRow = 5;
+
+      const vesselOpening = lingGuiMatrix[matrixRow][cycleIndex];
+      
+      // Kopplungspunkt (Coupled Point) basierend auf der Stunde (Stunden-Zweig)
       const vesselCouplings = [
         "Bl 62 (Shenmai) - Yang Qiao", "Dü 3 (Houxi) - Du Mai", "Ni 6 (Zhaohai) - Yin Qiao", "Lu 7 (Lieque) - Ren Mai",
         "Pe 6 (Neiguan) - Yin Wei", "Mi 4 (Gongsun) - Chong Mai", "3E 5 (Waiguan) - Yang Wei", "Gb 41 (Zulinqi) - Dai Mai",
         "Bl 62 (Shenmai) - Yang Qiao", "Dü 3 (Houxi) - Du Mai", "Ni 6 (Zhaohai) - Yin Qiao", "Lu 7 (Lieque) - Ren Mai"
       ];
-
-      let openingIndex = dayStemIndex;
-      if (openingIndex >= 8) openingIndex = openingIndex - 8; 
-
-      document.getElementById('vesselOpeningPoint').textContent = vesselOpenings[openingIndex];
+      
+      document.getElementById('vesselOpeningPoint').textContent = vesselOpening;
       document.getElementById('vesselCoupledPoint').textContent = vesselCouplings[hourBranchIndex];
 
       // --- VERBOTENE TAGE MIT COUNTDOWN ---
