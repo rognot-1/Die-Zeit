@@ -79,6 +79,12 @@
     footer a:hover { text-decoration: underline; }
     .paypal-btn { display: inline-block; background: #0079C1; color: #fff !important; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: bold; margin-top: 1rem; text-decoration: none !important; transition: 0.2s; }
     .paypal-btn:hover { background: #005c94; }
+
+    /* Ba Zi Styling */
+    .bazi-row { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.3rem; }
+    .bazi-label { color: #aaa; }
+    .bazi-val { color: var(--accent-gold); font-weight: bold; }
+    .bazi-hidden { font-size: 0.75rem; color: #bbb; font-style: italic; }
   </style>
 </head>
 <body>
@@ -237,12 +243,35 @@
       </div>
     </div>
 
+    <!-- BA ZI KARTE -->
     <div id="baZiData" style="background: #2a2a1a; padding: 1rem; border-radius: 6px; margin-top: 1rem; border: 1px solid var(--accent-gold); display: none;">
-      <div style="color: var(--accent-gold); font-weight: bold; margin-bottom: 0.5rem; text-align: center; font-size: 0.9rem;">Ba Zi (Vier Säulen)</div>
-      <div class="row"><span class="label">Jahr</span><span class="value" id="bzYear" style="color: var(--accent-gold);">–</span></div>
-      <div class="row"><span class="label">Monat</span><span class="value" id="bzMonth" style="color: var(--accent-gold);">–</span></div>
-      <div class="row"><span class="label">Tag</span><span class="value" id="bzDay" style="color: var(--accent-gold);">–</span></div>
-      <div class="row"><span class="label">Stunde</span><span class="value" id="bzHour" style="color: var(--accent-gold);">–</span></div>
+      <div style="color: var(--accent-gold); font-weight: bold; margin-bottom: 0.5rem; text-align: center; font-size: 0.9rem;">Ba Zi (Vier Säulen inkl. Verborgene Stämme)</div>
+      
+      <div class="bazi-row">
+        <span class="bazi-label">Jahr:</span>
+        <span class="bazi-val" id="bzYear">–</span>
+      </div>
+      <div class="bazi-row">
+        <span class="bazi-label">Monat:</span>
+        <span class="bazi-val" id="bzMonth">–</span>
+      </div>
+      <div class="bazi-row">
+        <span class="bazi-label">Tag:</span>
+        <span class="bazi-val" id="bzDay">–</span>
+      </div>
+      <div class="bazi-row">
+        <span class="bazi-label">Stunde:</span>
+        <span class="bazi-val" id="bzHour">–</span>
+      </div>
+      
+      <!-- Verborgene Stämme Sektion -->
+      <div style="margin-top: 1rem; border-top: 1px dashed #555; padding-top: 0.5rem;">
+        <div style="color: var(--accent-gold); font-size: 0.8rem; margin-bottom: 0.3rem;">Verborgene Stämme (Cang Gan):</div>
+        <div class="bazi-row"><span class="bazi-label">Im Jahr:</span> <span class="bazi-hidden" id="bzHiddenYear">–</span></div>
+        <div class="bazi-row"><span class="bazi-label">Im Monat:</span> <span class="bazi-hidden" id="bzHiddenMonth">–</span></div>
+        <div class="bazi-row"><span class="bazi-label">Am Tag:</span> <span class="bazi-hidden" id="bzHiddenDay">–</span></div>
+        <div class="bazi-row"><span class="bazi-label">In der Stunde:</span> <span class="bazi-hidden" id="bzHiddenHour">–</span></div>
+      </div>
     </div>
   </div>
 
@@ -649,6 +678,7 @@
         }
       }
 
+      // --- BA ZI MIT VERBORGENEN STÄMMEN ---
       if (isTimeTravel) {
         document.getElementById('baZiData').style.display = 'block';
         
@@ -660,13 +690,49 @@
         let bzYearBranchIdx = (bzYear - 1984) % 12;
         if (bzYearBranchIdx < 0) bzYearBranchIdx += 12;
         
+        // Jahr
         document.getElementById('bzYear').textContent = stems[bzYearStemIdx] + " / " + branches[bzYearBranchIdx];
-
+        
+        // Monat
         let monthBranchIndex = (month + 1) % 12; 
-        document.getElementById('bzMonth').textContent = stems[(bzYearStemIdx * 2 + month) % 10] + " / " + branches[monthBranchIndex];
+        const bzMonthStem = stems[(bzYearStemIdx * 2 + month) % 10];
+        const bzMonthBranch = branches[monthBranchIndex];
+        document.getElementById('bzMonth').textContent = bzMonthStem + " / " + bzMonthBranch;
 
+        // Tag
         document.getElementById('bzDay').textContent = stems[dayStemIndex] + " / " + branches[dayBranchIndex];
+        
+        // Stunde
         document.getElementById('bzHour').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
+        
+        // --- VERBORGENE STÄMME (Cang Gan) ---
+        // Matrix: [Hauptstamm, Neben-/Reststamm] pro Erdzweig (0=Zi, 1=Chou, etc.)
+        // (Vereinfachte klassische Zuordnung der wichtigsten verborgenen Stämme)
+        const hiddenStemsMatrix = [
+          ["Gui (Wasser)"], // Zi
+          ["Ji (Erde)", "Gui (Wasser)", "Xin (Metall)"], // Chou
+          ["Jia (Holz)", "Bing (Feuer)", "Wu (Erde)"], // Yin
+          ["Yi (Holz)"], // Mao
+          ["Wu (Erde)", "Yi (Holz)", "Gui (Wasser)"], // Chen
+          ["Bing (Feuer)", "Geng (Metall)", "Wu (Erde)"], // Si
+          ["Ding (Feuer)", "Ji (Erde)"], // Wu
+          ["Ji (Erde)", "Ding (Feuer)", "Yi (Holz)"], // Wei
+          ["Geng (Metall)", "Ren (Wasser)", "Wu (Erde)"], // Shen
+          ["Xin (Metall)"], // You
+          ["Wu (Erde)", "Xin (Metall)", "Ding (Feuer)"], // Xu
+          ["Ren (Wasser)", "Jia (Holz)"] // Hai
+        ];
+
+        const hiddenYear = hiddenStemsMatrix[bzYearBranchIdx].join(", ");
+        const hiddenMonth = hiddenStemsMatrix[monthBranchIndex].join(", ");
+        const hiddenDay = hiddenStemsMatrix[dayBranchIndex].join(", ");
+        const hiddenHour = hiddenStemsMatrix[hourBranchIndex].join(", ");
+
+        document.getElementById('bzHiddenYear').textContent = hiddenYear;
+        document.getElementById('bzHiddenMonth').textContent = hiddenMonth;
+        document.getElementById('bzHiddenDay').textContent = hiddenDay;
+        document.getElementById('bzHiddenHour').textContent = hiddenHour;
+
       } else {
         document.getElementById('baZiData').style.display = 'none';
       }
