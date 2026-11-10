@@ -85,6 +85,10 @@
     .bazi-label { color: #aaa; }
     .bazi-val { color: var(--accent-gold); font-weight: bold; }
     .bazi-hidden { font-size: 0.75rem; color: #bbb; font-style: italic; }
+    
+    /* Tages-Element Styling */
+    .day-element-box { background: #2a1a2a; border: 1px solid #e91e63; padding: 0.8rem; border-radius: 6px; margin-top: 1rem; }
+    .day-element-title { color: var(--accent-pink); font-weight: bold; font-size: 0.9rem; margin-bottom: 0.5rem; text-align: center; }
   </style>
 </head>
 <body>
@@ -222,6 +226,19 @@
       <div class="row"><span class="label">Aktives Element (Stunde)</span><span class="value" id="currentElement" style="color: var(--accent-gold); font-weight: bold;">–</span></div>
       <div class="row"><span class="label">Jahreszeit (TCM)</span><span class="value" id="tcmSeason" style="color: var(--accent-gold); font-weight: bold;">–</span></div>
       <div class="row"><span class="label">Jahres-Element</span><span class="value" id="yearElement" style="color: var(--accent-gold); font-weight: bold;">–</span></div>
+    </div>
+
+    <!-- NEU: Tages-Element (Wu Xing für den Tag) -->
+    <div id="dayElementData" class="day-element-box">
+      <div class="day-element-title">☀️ Tages-Element (Wu Xing)</div>
+      <div class="vessel-row">
+        <span class="vessel-label">Element des Tages:</span>
+        <span class="vessel-value" id="currentDayElement" style="color: #ff80ab;">–</span>
+      </div>
+      <div class="vessel-row">
+        <span class="vessel-label">Therapeutischer Fokus:</span>
+        <span class="vessel-value" id="dayOrganFocus" style="color: #ff80ab; font-size: 0.8rem;">–</span>
+      </div>
     </div>
 
     <div id="ganzhiData" style="margin-top: 1rem; border-top: 1px solid #333; padding-top: 1rem;">
@@ -587,6 +604,19 @@
       const hourStemIndex = (hourStemBase + hourBranchIndex) % 10;
       document.getElementById('hourGanZhi').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
 
+      // --- TAGES-ELEMENT (Wu Xing) ---
+      // Die ersten 5 Stämme sind Yang, die letzten 5 Yin. Wir nehmen das Element des Tages-Stammes.
+      let dayElement = "Unbekannt";
+      let dayFocus = "";
+      if (dayStemIndex < 2) { dayElement = "Holz"; dayFocus = "Leber/Gallenblase (Zorn, Kreativität)"; }
+      else if (dayStemIndex < 4) { dayElement = "Feuer"; dayFocus = "Herz/Dünndarm (Freude, Unruhe)"; }
+      else if (dayStemIndex < 6) { dayElement = "Erde"; dayFocus = "Milz/Magen (Sorge, Nähren)"; }
+      else if (dayStemIndex < 8) { dayElement = "Metall"; dayFocus = "Lunge/Dickdarm (Trauer, Loslassen)"; }
+      else { dayElement = "Wasser"; dayFocus = "Niere/Blase (Angst, Wille)"; }
+      
+      document.getElementById('currentDayElement').textContent = dayElement + "-Tag";
+      document.getElementById('dayOrganFocus').textContent = dayFocus;
+
       // --- KORREKTUR 1: PUNKT DES TAGES ---
       const dailyPointsMatrix = [
         "Lu 11 (Shaoshang)", "Di 1 (Shangyang)", "Ma 45 (Lidui)", "Mi 1 (Yinbai)", "He 9 (Shaochong)",
@@ -706,8 +736,6 @@
         document.getElementById('bzHour').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
         
         // --- VERBORGENE STÄMME (Cang Gan) ---
-        // Matrix: [Hauptstamm, Neben-/Reststamm] pro Erdzweig (0=Zi, 1=Chou, etc.)
-        // (Vereinfachte klassische Zuordnung der wichtigsten verborgenen Stämme)
         const hiddenStemsMatrix = [
           ["Gui (Wasser)"], // Zi
           ["Ji (Erde)", "Gui (Wasser)", "Xin (Metall)"], // Chou
