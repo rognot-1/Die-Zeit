@@ -86,9 +86,12 @@
     .bazi-val { color: var(--accent-gold); font-weight: bold; }
     .bazi-hidden { font-size: 0.75rem; color: #bbb; font-style: italic; }
     
-    /* Tages-Element Styling */
+    /* Tages-Element & Mond Styling */
     .day-element-box { background: #2a1a2a; border: 1px solid #e91e63; padding: 0.8rem; border-radius: 6px; margin-top: 1rem; }
     .day-element-title { color: var(--accent-pink); font-weight: bold; font-size: 0.9rem; margin-bottom: 0.5rem; text-align: center; }
+    
+    .moon-phase-box { background: #1a2a3a; border: 1px solid #00bcd4; padding: 0.8rem; border-radius: 6px; margin-top: 1rem; }
+    .moon-phase-title { color: var(--accent-blue); font-weight: bold; font-size: 0.9rem; margin-bottom: 0.5rem; text-align: center; }
   </style>
 </head>
 <body>
@@ -228,7 +231,7 @@
       <div class="row"><span class="label">Jahres-Element</span><span class="value" id="yearElement" style="color: var(--accent-gold); font-weight: bold;">–</span></div>
     </div>
 
-    <!-- NEU: Tages-Element (Wu Xing für den Tag) -->
+    <!-- Tages-Element (Wu Xing für den Tag) -->
     <div id="dayElementData" class="day-element-box">
       <div class="day-element-title">☀️ Tages-Element (Wu Xing)</div>
       <div class="vessel-row">
@@ -238,6 +241,23 @@
       <div class="vessel-row">
         <span class="vessel-label">Therapeutischer Fokus:</span>
         <span class="vessel-value" id="dayOrganFocus" style="color: #ff80ab; font-size: 0.8rem;">–</span>
+      </div>
+    </div>
+
+    <!-- NEU: Mondphase für die Therapie -->
+    <div id="moonPhaseData" class="moon-phase-box">
+      <div class="moon-phase-title">🌕 Mondphase & Therapie</div>
+      <div class="vessel-row">
+        <span class="vessel-label">Aktuelle Phase:</span>
+        <span class="vessel-value" id="therapyMoonPhase" style="color: #80deea;">–</span>
+      </div>
+      <div class="vessel-row">
+        <span class="vessel-label">Mondalter:</span>
+        <span class="vessel-value" id="therapyMoonAge" style="color: #80deea;">–</span>
+      </div>
+      <div class="vessel-row">
+        <span class="vessel-label">Therapie-Empfehlung:</span>
+        <span class="vessel-value" id="therapyMoonAdvice" style="color: #80deea; font-size: 0.8rem;">–</span>
       </div>
     </div>
 
@@ -605,7 +625,6 @@
       document.getElementById('hourGanZhi').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
 
       // --- TAGES-ELEMENT (Wu Xing) ---
-      // Die ersten 5 Stämme sind Yang, die letzten 5 Yin. Wir nehmen das Element des Tages-Stammes.
       let dayElement = "Unbekannt";
       let dayFocus = "";
       if (dayStemIndex < 2) { dayElement = "Holz"; dayFocus = "Leber/Gallenblase (Zorn, Kreativität)"; }
@@ -616,6 +635,47 @@
       
       document.getElementById('currentDayElement').textContent = dayElement + "-Tag";
       document.getElementById('dayOrganFocus').textContent = dayFocus;
+
+      // --- MONDPHASE FÜR DIE THERAPIE ---
+      const moonIllum = SunCalc.getMoonIllumination(now);
+      const moonAge = (moonIllum.phase * 29.53059).toFixed(1); // Mondalter in Tagen
+      const phaseValue = moonIllum.phase; // 0 bis 1
+
+      let therapyMoonPhase = "";
+      let therapyMoonAdvice = "";
+
+      if (phaseValue >= 0 && phaseValue < 0.03) {
+        therapyMoonPhase = "Neumond";
+        therapyMoonAdvice = "Tiefstes Yin. Ideal für sanfte, nährende Behandlungen (Yin-Tonisierung).";
+      } else if (phaseValue >= 0.03 && phaseValue < 0.22) {
+        therapyMoonPhase = "Zunehmende Sichel";
+        therapyMoonAdvice = "Qi steigt auf. Gut für den Aufbau und die Tonisierung von Yang.";
+      } else if (phaseValue >= 0.22 && phaseValue < 0.28) {
+        therapyMoonPhase = "Zunehmender Halbmond";
+        therapyMoonAdvice = "Energie im Aufbau. Ideal für Tonisierung und Stärkung.";
+      } else if (phaseValue >= 0.28 && phaseValue < 0.47) {
+        therapyMoonPhase = "Zunehmender Mond";
+        therapyMoonAdvice = "Gute Zeit für Aufbau, Stärkung und Yang-Behandlungen.";
+      } else if (phaseValue >= 0.47 && phaseValue < 0.53) {
+        therapyMoonPhase = "Vollmond";
+        therapyMoonAdvice = "Maximale Energie. Vorsicht mit zu vielen Nadeln! Eher sanft behandeln.";
+      } else if (phaseValue >= 0.53 && phaseValue < 0.72) {
+        therapyMoonPhase = "Abnehmender Mond";
+        therapyMoonAdvice = "Energie sinkt. Gut für Sedierung und das Lösen von Stagnationen.";
+      } else if (phaseValue >= 0.72 && phaseValue < 0.78) {
+        therapyMoonPhase = "Abnehmender Halbmond";
+        therapyMoonAdvice = "Ideal für das Ableiten und Sedieren von Fülle-Zuständen.";
+      } else if (phaseValue >= 0.78 && phaseValue < 0.97) {
+        therapyMoonPhase = "Abnehmende Sichel";
+        therapyMoonAdvice = "Zeit des Loslassens. Gut für Reinigung und Sedierung.";
+      } else {
+        therapyMoonPhase = "Neumond (Übergang)";
+        therapyMoonAdvice = "Tiefstes Yin. Ideal für sanfte, nährende Behandlungen.";
+      }
+
+      document.getElementById('therapyMoonPhase').textContent = therapyMoonPhase;
+      document.getElementById('therapyMoonAge').textContent = moonAge + " Tage";
+      document.getElementById('therapyMoonAdvice').textContent = therapyMoonAdvice;
 
       // --- KORREKTUR 1: PUNKT DES TAGES ---
       const dailyPointsMatrix = [
