@@ -183,12 +183,8 @@
     <div id="vesselData" class="vessel-box">
       <div class="vessel-title">🌊 Acht Gefäße (Ba Mai) - 60-Tage-Zyklus</div>
       <div class="vessel-row">
-        <span class="vessel-label">Öffnungspunkt (Ling Gui):</span>
+        <span class="vessel-label">Öffnung & Kopplung (Paar):</span>
         <span class="vessel-value" id="vesselOpeningPoint">–</span>
-      </div>
-      <div class="vessel-row">
-        <span class="vessel-label">Kopplungspunkt (Stunde):</span>
-        <span class="vessel-value" id="vesselCoupledPoint">–</span>
       </div>
     </div>
 
@@ -562,16 +558,14 @@
       const hourStemIndex = (hourStemBase + hourBranchIndex) % 10;
       document.getElementById('hourGanZhi').textContent = stems[hourStemIndex] + " / " + branches[hourBranchIndex];
 
-      // --- FIX 1: PUNKT DES TAGES (Na Jia Fa) ---
-      // Zeigt jetzt den konkreten Punkt (z.B. He 9), nicht nur den Typ.
+      // --- KORREKTUR 1: PUNKT DES TAGES ---
       const dailyPointsMatrix = [
         "Lu 11 (Shaoshang)", "Di 1 (Shangyang)", "Ma 45 (Lidui)", "Mi 1 (Yinbai)", "He 9 (Shaochong)",
         "Dü 1 (Shaoze)", "Bl 67 (Zhiyin)", "Ni 1 (Yongquan)", "Pe 9 (Zhongchong)", "3E 1 (Guanchong)"
       ];
       document.getElementById('dailyPoint').textContent = dailyPointsMatrix[dayStemIndex];
 
-      // --- FIX 2: ZI WU LIU ZHU (Na Zi) ---
-      // Zeigt jetzt den konkreten Punkt aus der 10x5 Matrix.
+      // --- KORREKTUR 2: ZI WU LIU ZHU ---
       const ziWuMatrix = [
         ["Lu 11 (Shaoshang)", "Lu 10 (Yuji)", "Lu 9 (Taiyuan)", "Lu 8 (Jingqu)", "Lu 5 (Chize)"],
         ["Di 1 (Shangyang)", "Di 2 (Erjian)", "Di 3 (Sanjian)", "Di 5 (Yangxi)", "Di 11 (Quchi)"],
@@ -587,7 +581,6 @@
       const ziWuHourIndex = hourBranchIndex % 5; 
       const ziWuPoint = ziWuMatrix[dayStemIndex][ziWuHourIndex];
       document.getElementById('ziWuPoint').textContent = ziWuPoint;
-      // Um den "Geöffneten Punkt (Na Zi)" im unteren Bereich auch zu füllen:
       document.getElementById('acupoint').textContent = ziWuPoint;
 
       // Heavenly Stars
@@ -598,7 +591,7 @@
       ];
       document.getElementById('heavenlyStarText').textContent = heavenlyStars[dayStemIndex];
 
-      // --- FIX 3: ACHT GEFÄSSE (Ling Gui Ba Fa) - FESTE KOPPLUNG ---
+      // --- KORREKTUR 3: ACHT GEFÄSSE (FESTE PAARE) ---
       const lingGuiMatrix = [
         ["Gb 41 (Dai Mai) & Sj 5", "3E 5 (Yang Wei) & Gb 41", "Dü 3 (Du Mai) & Bl 62", "Bl 62 (Yang Qiao) & Dü 3", "Pe 6 (Yin Wei) & Sj 5", "Lu 7 (Ren Mai) & Ni 6", "Ni 6 (Yin Qiao) & Lu 7", "Mi 4 (Chong Mai) & Pe 6", "Gb 41 (Dai Mai) & Sj 5", "3E 5 (Yang Wei) & Gb 41"],
         ["Dü 3 (Du Mai) & Bl 62", "Bl 62 (Yang Qiao) & Dü 3", "Pe 6 (Yin Wei) & Sj 5", "Lu 7 (Ren Mai) & Ni 6", "Ni 6 (Yin Qiao) & Lu 7", "Mi 4 (Chong Mai) & Pe 6", "Gb 41 (Dai Mai) & Sj 5", "3E 5 (Yang Wei) & Gb 41", "Dü 3 (Du Mai) & Bl 62", "Bl 62 (Yang Qiao) & Dü 3"],
@@ -619,11 +612,7 @@
       else if (dayIn60Cycle < 50) matrixRow = 4;
       else matrixRow = 5;
 
-      // Öffnungspunkt und Kopplungspunkt sind jetzt in einem String kombiniert
       document.getElementById('vesselOpeningPoint').textContent = lingGuiMatrix[matrixRow][cycleIndex];
-      // Der Kopplungspunkt ist in der Ling Gui Methode fest an den Öffnungspunkt gebunden.
-      // Wir zeigen hier zur Klarheit "Siehe Öffnungspunkt (Paar)"
-      document.getElementById('vesselCoupledPoint').textContent = "Festes Paar (siehe oben)";
 
       // --- VERBOTENE TAGE MIT COUNTDOWN ---
       const forbiddenBox = document.getElementById('forbiddenBox');
